@@ -1,26 +1,30 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import packageJson from '../package.json';
+import RESTCall from './Call';
+import Folder from './Folder';
+import ListEntry from './ListEntry';
+import TreeDataProvider from './TreeDataProvider';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): void {
+	console.log(`${packageJson.name} running v.${packageJson.version}`);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "restless-http-rest-client" is now active!');
+	// console.log('Resetting all', context.workspaceState.update(commonConst.listKey, undefined));
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('restless-http-rest-client.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from RESTless - HTTP / REST client!');
-	});
+	const treeProvider = new TreeDataProvider(context);
 
-	context.subscriptions.push(disposable);
+	const getListEntry = (identifier: ListEntry['identifier']): RESTCall | Folder | undefined => treeProvider.currentList.find((x) => x.identifier === identifier);
+
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.addCall', (e?: Folder) => treeProvider.addItemToList('call', e)));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.addFolder', (e?: Folder) => treeProvider.addItemToList('folder', e)));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.renameEntry', (e) => {
+		const element = getListEntry(e.identifier);
+		if (element) element.rename();
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.deleteEntry', (e) => {
+		const element = getListEntry(e.identifier);
+		if (element) element.delete();
+	}));
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate(): void {}
