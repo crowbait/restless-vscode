@@ -1,4 +1,3 @@
-import commonConst from './commonConst';
 import ListEntry from './ListEntry';
 
 class RESTCall extends ListEntry {
@@ -10,17 +9,21 @@ class RESTCall extends ListEntry {
 
   contextValue = 'call' as const;
 
+  /** Deletes itself from list only if called without arguments. Otherwise, returns it's ID for bundled call. */
   async delete(called?: boolean): Promise<string> {
-    // TODO delete document
     if (!called) {
-      await this.provider.context.workspaceState.update(
-        commonConst.listKey,
-        JSON.stringify(this.provider.currentList.filter((x) => x.identifier !== this.identifier).map((x) => x.getCore()))
-      );
-      this.provider.refresh();
+      this.provider.currentList = this.provider.currentList.filter((x) => x.identifier !== this.identifier);
+      this.provider.saveAndUpdate();
     }
     return this.identifier;
   }
+
+  getJsonObject = (): {} => ({
+    contextValue: this.contextValue,
+    identifier: this.identifier,
+    label: this.label,
+    folderPath: this.folderPath
+  });
 }
 
 export default RESTCall;

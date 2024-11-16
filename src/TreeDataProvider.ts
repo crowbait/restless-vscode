@@ -1,14 +1,19 @@
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'fs';
+import path, {dirname} from 'path';
 import * as vscode from 'vscode';
 import RESTCall from './Call';
 import Folder from './Folder';
 import ListEntry, {IListEntryCore} from './ListEntry';
-import commonConst from './commonConst';
 
 class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.TreeDragAndDropController<ListEntry> {
   constructor(
     context: vscode.ExtensionContext
   ) {
+    console.log('TreeDataProvider created');
+
     this.context = context;
+    this.filepath = path.join(vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '', '.vscode', 'rest-calls.json');
+    console.log(this.filepath);
     const view = vscode.window.createTreeView('restlessHttpRestClientView', {
 			treeDataProvider: this,
 			showCollapseAll: true,
@@ -19,6 +24,7 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
   }
 
   context: vscode.ExtensionContext;
+  filepath: string;
   currentList: Array<RESTCall | Folder> = [];
 
   dropMimeTypes = ['application/vnd.code.tree.restlessHttpRestClientView'];
@@ -27,48 +33,54 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
 	readonly onDidChangeTreeData: vscode.Event<ListEntry | undefined | void> = this._onDidChangeTreeData.event;
 
   refresh = (): void => {
+    this.currentList = [];
     this._onDidChangeTreeData.fire();
   };
 
+  saveAndUpdate = async (): Promise<void> => {
+    mkdirSync(dirname(this.filepath), {recursive: true});
+    writeFileSync(this.filepath, JSON.stringify(this.currentList.map((x) => x.getJsonObject()), null, 2), 'utf-8');
+    this.refresh();
+  };
   getTreeItem = (element: ListEntry): vscode.TreeItem => element;
-
   getChildren = (element?: ListEntry): Thenable<ListEntry[]> => {
+    if (this.currentList.length === 0) {
+      const stored = JSON.parse(existsSync(this.filepath) ? readFileSync(this.filepath, 'utf-8') : '[]') as IListEntryCore[];
+      const transformed = stored.map((x) => x.contextValue === 'call' ? new RESTCall(this, x) : new Folder(this, x));
+      transformed.sort(ListEntry.sorter);
+      console.info('Read:', transformed);
+      this.currentList = transformed;
+    }
     if (element) {
       if (element.contextValue !== 'folder') return Promise.resolve([]);
       const ret = new Folder(this, element).getChildren();
       ret.sort(ListEntry.sorter);
       return Promise.resolve(ret);
     }
-    const stored = JSON.parse(this.context.workspaceState.get(commonConst.listKey) ?? '[]') as IListEntryCore[];
-    console.info('Read:', stored);
-    let ret: typeof this.currentList = stored.map((x) => x.contextValue === 'call' ? new RESTCall(this, x) : new Folder(this, x));
-    this.currentList = ret;
-    ret = ret.filter((x) => !x.folderPath);
-    ret.sort(ListEntry.sorter);
-    return Promise.resolve(ret);
+    return Promise.resolve(this.currentList.filter((x) => !x.folderPath));
   };
 
   addItemToList = async (contextValue: ListEntry['contextValue'], folder?: Folder): Promise<void> => {
     const name = await vscode.window.showInputBox({prompt: 'Enter name'});
     if (!name) return undefined as any;
-    const read = JSON.parse(this.context.workspaceState.get(commonConst.listKey) ?? '[]') as IListEntryCore[];
     const data: IListEntryCore = {
       contextValue: contextValue,
-      identifier: ListEntry.createIdentifier(name, read),
+      identifier: ListEntry.createIdentifier(name, this.currentList),
       label: name,
       folderPath: folder ? `${folder.folderPath ?? ''}/${folder.identifier}` : undefined
     };
     const item = contextValue === 'call' ? new RESTCall(this, data) : new Folder(this, data);
-    await this.context.workspaceState.update(commonConst.listKey, JSON.stringify([...read, item.getCore()]));
-    this.refresh();
+    this.currentList = [...this.currentList, item];
+    this.saveAndUpdate();
   };
 
   handleDrop = async (target: ListEntry | undefined, sources: vscode.DataTransfer): Promise<void> => {
-    (new ListEntry(this, sources.get('application/vnd.code.tree.restlessHttpRestClientView')?.value[0])).reparent(target);
-  }
+    const source = sources.get('application/vnd.code.tree.restlessHttpRestClientView')?.value[0];
+    (source.contextValue === 'call' ? new RESTCall(this, source) : new Folder(this, source)).reparent(target);
+  };
   handleDrag = async (source: readonly ListEntry[], dataTransfer: vscode.DataTransfer): Promise<void> => {
     dataTransfer.set('application/vnd.code.tree.restlessHttpRestClientView', new vscode.DataTransferItem(source.map((x) => x.getCore())));
-  }
+  };
 };
 
 export default TreeDataProvider;

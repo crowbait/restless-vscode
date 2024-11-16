@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import commonConst from './commonConst';
+import RESTCall from './Call';
+import Folder from './Folder';
 import TreeDataProvider from './TreeDataProvider';
 
 export interface IListEntryCore {
@@ -15,7 +16,6 @@ class ListEntry extends vscode.TreeItem {
     public readonly json: string | IListEntryCore
   ) {
     const item = typeof json === 'string' ? JSON.parse(json) as ListEntry : json;
-    console.log("construct", item);
     super(item.label, item.contextValue === 'call' ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
     
     this.provider = provider;
@@ -48,28 +48,31 @@ class ListEntry extends vscode.TreeItem {
       value: this.label
     });
     if (!name) return;
-    this.label = name;
-    const read = JSON.parse(this.provider.context.workspaceState.get(commonConst.listKey) ?? '[]') as IListEntryCore[];
-    const foundIndex = read.findIndex((x) => x.identifier === this.identifier);
+    const newIdentifier = ListEntry.createIdentifier(name, this.provider.currentList);
+
+    const foundIndex = this.provider.currentList.findIndex((x) => x.identifier === this.identifier);
     if (foundIndex === -1) throw new Error('Could not find rename target!');
-    read[foundIndex] = this.getCore();
-    await this.provider.context.workspaceState.update(commonConst.listKey, JSON.stringify(read));
-    this.provider.refresh();
+
+    if (this.contextValue === 'folder') {
+      this.provider.currentList.forEach((x, i) => {
+        if (x.folderPath) this.provider.currentList[i].folderPath = x.folderPath.replaceAll(this.identifier, newIdentifier);
+      });
+    }
+
+    this.label = name;
+    this.identifier = newIdentifier;
+
+    this.provider.currentList[foundIndex] = this as unknown as RESTCall | Folder;
+    this.provider.saveAndUpdate();
   };
 
   reparent = (newParent?: ListEntry): void => {
-    console.log('reparent to', newParent, this)
     if (newParent !== undefined && newParent.contextValue !== 'folder') return;
     if (newParent?.identifier === this.identifier) return;
     if (newParent?.folderPath?.includes(this.identifier)) return;
     this.folderPath = newParent ? `${newParent.folderPath ?? ''}/${newParent.identifier}` : undefined;
-    const newList = [...this.provider.currentList.filter((x) => x.identifier !== this.identifier), this].map((x) => x.getCore());
-    this.provider.context.workspaceState.update(
-      commonConst.listKey,
-      JSON.stringify(newList)
-    );
-    console.log(newList)
-    this.provider.refresh();
+    this.provider.currentList = [...this.provider.currentList.filter((x) => x.identifier !== this.identifier), (this as unknown as RESTCall | Folder)];
+    this.provider.saveAndUpdate();
   };
 
 

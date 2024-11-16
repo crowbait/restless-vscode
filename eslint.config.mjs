@@ -105,7 +105,7 @@ export default [{
     /** enforces consistent quote styles, current: single quote: ' */
     'quotes': ['error', 'single'],
     /** requires that async functions must use await, otherwise they don't need to be async; current: yes */
-    'require-await': 'error',
+    'require-await': 'off',
     /** enforces line-ending semicolons, current: yes */
     'semi': ['error', 'always'],
     /** requires spaces between a comment marker and it's content, eg. //abc --> // abc */

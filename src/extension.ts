@@ -8,7 +8,9 @@ import TreeDataProvider from './TreeDataProvider';
 export function activate(context: vscode.ExtensionContext): void {
 	console.log(`${packageJson.name} running v.${packageJson.version}`);
 
-	// console.log('Resetting all', context.workspaceState.update(commonConst.listKey, undefined));
+	const rootPath = (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0))
+		? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
+	if (!rootPath) return;
 
 	const treeProvider = new TreeDataProvider(context);
 
@@ -23,6 +25,10 @@ export function activate(context: vscode.ExtensionContext): void {
 	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.deleteEntry', (e) => {
 		const element = getListEntry(e.identifier);
 		if (element) element.delete();
+	}));
+
+	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
+		treeProvider.refresh();
 	}));
 }
 
