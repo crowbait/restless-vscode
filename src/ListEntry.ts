@@ -24,6 +24,7 @@ class ListEntry extends vscode.TreeItem {
     this.contextValue = item.contextValue;
     this.label = item.label;
     this.folderPath = item.folderPath;
+    // TODO show URL in tooltip
     if (item.contextValue === 'call') this.tooltip = 'Call me baby';
   }
 

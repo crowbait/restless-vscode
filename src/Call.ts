@@ -1,3 +1,4 @@
+import {ThemeIcon} from 'vscode';
 import ListEntry from './ListEntry';
 
 class RESTCall extends ListEntry {
@@ -8,6 +9,7 @@ class RESTCall extends ListEntry {
   }
 
   contextValue = 'call' as const;
+  iconPath = new ThemeIcon('run');
 
   /** Deletes itself from list only if called without arguments. Otherwise, returns it's ID for bundled call. */
   async delete(called?: boolean): Promise<string> {

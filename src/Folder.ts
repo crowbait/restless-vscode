@@ -1,3 +1,4 @@
+import {ThemeIcon} from 'vscode';
 import RESTCall from './Call';
 import ListEntry from './ListEntry';
 
@@ -9,6 +10,7 @@ class Folder extends ListEntry {
   }
 
   contextValue = 'folder' as const;
+  iconPath = ThemeIcon.Folder;
 
   getChildren = (): Array<RESTCall | Folder> => {
     const children = this.provider.currentList
