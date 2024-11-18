@@ -2,6 +2,7 @@
   "name": "restless-http-rest-client",
   "displayName": "RESTless - HTTP / REST client",
   "description": "Integrated, flexible REST client",
+  "icon": "ressources/icon.png",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.95.0"
@@ -13,7 +14,9 @@
   "keywords": [
     "api"
   ],
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -36,6 +39,15 @@
         "command": "restless-http-rest-client.deleteEntry",
         "title": "Delete",
         "icon": "$(trash)"
+      },
+      {
+        "command": "restless-http-rest-client.runCall",
+        "title": "Run",
+        "icon": "$(run)"
+      },
+      {
+        "command": "restless-http-rest-client.editCall",
+        "title": "Edit"
       }
     ],
     "menus": {
@@ -77,28 +89,40 @@
           "title": "Rename Request",
           "when": "view == restlessHttpRestClientView",
           "group": "inline"
+        },
+        {
+          "command": "restless-http-rest-client.runCall",
+          "title": "Run",
+          "when": "view == restlessHttpRestClientView && viewItem == call",
+          "group": "inline"
         }
       ]
     },
     "viewsContainers": {
-      "activitybar": [{
-        "id": "restlessHttpRestClient",
-        "title": "RESTless",
-        "icon": "media/icon.svg"
-      }]
+      "activitybar": [
+        {
+          "id": "restlessHttpRestClient",
+          "title": "RESTless",
+          "icon": "ressources/icon.svg"
+        }
+      ]
     },
     "views": {
-      "restlessHttpRestClient": [{
-        "id": "restlessHttpRestClientView",
-        "name": "RESTless"
-      }]
+      "restlessHttpRestClient": [
+        {
+          "id": "restlessHttpRestClientView",
+          "name": "RESTless"
+        }
+      ]
     },
-    "viewsWelcome": [{
-      "id": "restlessHttpRestClientWelcome",
-      "name": "RESTless",
-      "view": "restlessHttpRestClientView",
-      "contents": "Start by creating a folder or request using the buttons at the top."
-    }]
+    "viewsWelcome": [
+      {
+        "id": "restlessHttpRestClientWelcome",
+        "name": "RESTless",
+        "view": "restlessHttpRestClientView",
+        "contents": "Start by creating a folder or request using the buttons at the top."
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -118,5 +142,9 @@
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.13.0",
     "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@vscode-elements/elements": "^1.8.0",
+    "@vscode/codicons": "^0.0.36"
   }
 }

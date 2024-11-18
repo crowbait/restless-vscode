@@ -1,7 +1,7 @@
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'fs';
 import path, {dirname} from 'path';
 import * as vscode from 'vscode';
-import RESTCall from './Call';
+import RESTCall, {JSONCallObject} from './Call';
 import Folder from './Folder';
 import ListEntry, {IListEntryCore} from './ListEntry';
 
@@ -33,20 +33,23 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
 	readonly onDidChangeTreeData: vscode.Event<ListEntry | undefined | void> = this._onDidChangeTreeData.event;
 
   refresh = (): void => {
-    this.currentList = [];
+    // this.currentList = [];
     this._onDidChangeTreeData.fire();
   };
 
-  saveAndUpdate = async (): Promise<void> => {
+  save = (): void => {
     mkdirSync(dirname(this.filepath), {recursive: true});
     writeFileSync(this.filepath, JSON.stringify(this.currentList.map((x) => x.getJsonObject()), null, 2), 'utf-8');
+  };
+  saveAndUpdate = (): void => {
+    this.save();
     this.refresh();
   };
   getTreeItem = (element: ListEntry): vscode.TreeItem => element;
   getChildren = (element?: ListEntry): Thenable<ListEntry[]> => {
     if (this.currentList.length === 0) {
       const stored = JSON.parse(existsSync(this.filepath) ? readFileSync(this.filepath, 'utf-8') : '[]') as IListEntryCore[];
-      const transformed = stored.map((x) => x.contextValue === 'call' ? new RESTCall(this, x) : new Folder(this, x));
+      const transformed = stored.map((x) => x.contextValue === 'call' ? new RESTCall(this, x as JSONCallObject) : new Folder(this, x));
       transformed.sort(ListEntry.sorter);
       console.info('Read:', transformed);
       this.currentList = transformed;
@@ -69,9 +72,10 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
       label: name,
       folderPath: folder ? `${folder.folderPath ?? ''}/${folder.identifier}` : undefined
     };
-    const item = contextValue === 'call' ? new RESTCall(this, data) : new Folder(this, data);
+    const item = contextValue === 'call' ? new RESTCall(this, data as JSONCallObject) : new Folder(this, data);
     this.currentList = [...this.currentList, item];
     this.saveAndUpdate();
+    if (item.contextValue === 'call') item.edit();
   };
 
   handleDrop = async (target: ListEntry | undefined, sources: vscode.DataTransfer): Promise<void> => {

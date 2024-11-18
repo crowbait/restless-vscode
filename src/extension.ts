@@ -27,6 +27,15 @@ export function activate(context: vscode.ExtensionContext): void {
 		if (element) element.delete();
 	}));
 
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.runCall', (e) => {
+		const call = getListEntry(e.identifier);
+		if (call && call.contextValue === 'call') call.run();
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.editCall', (e) => {
+		const call = getListEntry(e.identifier);
+		if (call && call.contextValue === 'call') call.edit();
+	}));
+
 	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
 		treeProvider.refresh();
 	}));

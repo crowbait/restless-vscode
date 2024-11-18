@@ -13,7 +13,7 @@ export interface IListEntryCore {
 class ListEntry extends vscode.TreeItem {
   constructor(
     provider: TreeDataProvider,
-    public readonly json: string | IListEntryCore
+    json: string | IListEntryCore
   ) {
     const item = typeof json === 'string' ? JSON.parse(json) as ListEntry : json;
     super(item.label, item.contextValue === 'call' ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
@@ -24,8 +24,6 @@ class ListEntry extends vscode.TreeItem {
     this.contextValue = item.contextValue;
     this.label = item.label;
     this.folderPath = item.folderPath;
-    // TODO show URL in tooltip
-    if (item.contextValue === 'call') this.tooltip = 'Call me baby';
   }
 
   provider: TreeDataProvider;
