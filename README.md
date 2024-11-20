@@ -1,71 +1,40 @@
-# restless-http-rest-client README
+# RESTless HTTP / REST Client VSCode Extension
 
-This is the README for your extension "restless-http-rest-client". After writing up a brief description, we recommend including the following sections.
+RESTless is a Visual Studio Code extension which integrates an HTTP client into VSCode. It features a GUI for editing the requests as well as running them.
+
+It also supports externally sourced variables for high flexibility and keeping secrets out of your codebase.
+
+![Showcase Image](ressources/showcase.png)
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Support for Methods, Headers, [Authentication](#authentication) and request bodies
+- Highly flexible [variable](#variables) substitution system
+- Saves your configured HTTP calls to the workspace so you can share your tests
+- Neatly arranged in a nested, browsable tree structure with drag-and-drop reordering
+- View response as dynamic (collapsible) JSON structure or rendered HTML where applicable; view raw if you want to
 
-For example if there is an image subfolder under your extension project workspace:
+## Variables
 
-\!\[feature X\]\(images/feature-x.png\)
+Every text input accepts variables in a special format. This way you can populate request options with information read from files or the environment, thus enabling you to keep secrets out of your codebase.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Variables are substituted when running the call an currently, the following are supported: 
+- `{{file "relative/path.file"}}`: substitute with entire content of a file
+- `{{env "variable"}}`: subsitute with environment variable
+- `{{.env "relative/path.file" "variable"}}`: substitute with variable read from given `.env`file
 
-## Requirements
+These variables can also be nested - for example, one may have a file path as a variable in a `.env` file:
+```
+{{file "{{.env "settings.env" "file"}}"}}
+```
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Variable parameters are *delimited* by double quotes and therefore currently cannot contain double quotes in the values (in some circumstances).
 
-## Extension Settings
+## Authentication
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+Authentication supports additional special "variables" which construct appropriate headers on runtime:
 
-For example:
+- `{{auth basic "username" "password"}}`
+- `{{auth bearer "token"}}`
 
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Again, these can contain regular variables as outlined above.
