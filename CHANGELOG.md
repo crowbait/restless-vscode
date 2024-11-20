@@ -1,9 +1,9 @@
-# Change Log
+# 1.1.0 (2024-11-20)
 
-All notable changes to the "restless-http-rest-client" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+### Features
 
-## [Unreleased]
+* basic tree structure handling ([1cad158](https://github.com/crowbait/restless-vscode/commit/1cad158a4beeff51202afa6d6a1f2629cba53bc0))
 
-- Initial release
+
+
