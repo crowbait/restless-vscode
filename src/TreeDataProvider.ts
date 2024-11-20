@@ -12,7 +12,7 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
     console.log('TreeDataProvider created');
 
     this.context = context;
-    this.filepath = path.join(vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '', '.vscode', 'rest-calls.json');
+    this.filepath = path.join(vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '', '.vscode', 'restless.json');
     console.log(this.filepath);
     const view = vscode.window.createTreeView('restlessHttpRestClientView', {
 			treeDataProvider: this,
@@ -70,10 +70,11 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
       contextValue: contextValue,
       identifier: ListEntry.createIdentifier(name, this.currentList),
       label: name,
-      folderPath: folder ? `${folder.folderPath ?? ''}/${folder.identifier}` : undefined
+      folderPath: folder?.contextValue !== 'folder' ? undefined : folder ? `${folder.folderPath ?? ''}/${folder.identifier}` : undefined
     };
     const item = contextValue === 'call' ? new RESTCall(this, data as JSONCallObject) : new Folder(this, data);
     this.currentList = [...this.currentList, item];
+    this.currentList.sort(ListEntry.sorter);
     this.saveAndUpdate();
     if (item.contextValue === 'call') item.edit();
   };

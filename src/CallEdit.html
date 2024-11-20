@@ -19,8 +19,12 @@
       h1 {
         display: flex;
         flex-direction: row;
-        align-items: center;
-        gap: 1rem;
+        align-items: baseline;
+        gap: 1.5rem;
+      }
+      h3 {
+        font-family: var(--vscode-editor-font-family);
+        margin-top: -1rem;
       }
 
       p {
@@ -54,7 +58,7 @@
       #input-url {
         flex: 1 1 36rem;
         max-width: 36rem;
-        --vscode-font-size: large;
+        /* -vscode-font-size: large; */
       }
 
       #container-options {
@@ -66,7 +70,7 @@
         border-radius: 4px;
       }
 
-      #json-errors {
+      #json-errors, #body-errors {
         color: lightcoral;
         font-family: var(--vscode-editor-font-family);
         background: darkred;
@@ -76,7 +80,14 @@
   </head>
   <body>
     <div id="root">
-      <h1><vscode-icon name="globe" size="48"></vscode-icon> <span id="title"></span></h1>
+      <h1>
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 8 24 7" xmlns="http://www.w3.org/2000/svg" style=" width: 8rem; ">
+          <path d="M4.5 11h-2V9H1v6h1.5v-2.5h2V15H6V9H4.5v2zm2.5-.5h1.5V15H10v-4.5h1.5V9H7v1.5zm5.5 0H14V15h1.5v-4.5H17V9h-4.5v1.5zm9-1.5H18v6h1.5v-2h2c.8 0 1.5-.7 1.5-1.5v-1c0-.8-.7-1.5-1.5-1.5zm0 2.5h-2v-1h2v1z"></path><path fill="none" d="M24 24H0V0h24v24z"></path>
+        </svg>
+        <vscode-icon name="pencil" size="24" style="margin-right: -1rem;"></vscode-icon>
+        <span id="title"></span>
+      </h1>
+      <h3 id="title-sub"></h3>
 
       <vscode-tabs id="tabs">
         <vscode-tab-header slot="header">UI</vscode-tab-header>
@@ -92,11 +103,14 @@
             <vscode-option>TRACE</vscode-option>
             <vscode-option>CONNECT</vscode-option>
             <vscode-option>OPTIONS</vscode-option>
+            <vscode-option>SEARCH</vscode-option>
           </vscode-single-select>
-          <vscode-textfield id="input-url" type="url" placeholder="URL"></vscode-textfield>
+          <vscode-textfield id="input-url" placeholder="URL"></vscode-textfield>
           <spacer></spacer>
           <vscode-button id="button-run" icon="run">Run</vscode-button>
         </div>
+
+        <br>
 
         <div id="container-options">
           <vscode-collapsible title="Variables">
@@ -141,8 +155,9 @@
               Example: <code>{{auth basic "{{env "systemuser"}}" "{{.env ".env" "API_PW"}}"}}</code>
             </p>
             <br>
-            <div style="display: flex;">
-              <vscode-textfield id="input-auth" placeholder="Auth" style="flex: 1; margin: 0.5rem;"></vscode-textfield>
+            <div style="display: flex; flex-direction: row; gap: 0.5rem; margin-left: 0.5rem; align-items: center;">
+              <span style="flex-grow: 0; flex-shrink: 0;">Authorization:</span>
+              <vscode-textfield id="input-auth" placeholder="Value" style="flex: 1; margin: 0.5rem;"></vscode-textfield>
             </div>
           </vscode-collapsible>
 
@@ -168,7 +183,8 @@
           <vscode-divider></vscode-divider>
 
           <vscode-collapsible title="Body" open>
-            <div style="margin: 0.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 0.5rem;">
+              <div id="body-errors" hidden></div>
               <vscode-textarea id="input-body" placeholder="Request Body" monospace style="width: 100%;" rows="12"></vscode-textarea>
             </div>
           </vscode-collapsible>
@@ -190,7 +206,7 @@
     
     <script>
       const vscode = acquireVsCodeApi();
-      let data = { /* getJsonObejct() */ };
+      let data = { /* getJsonObject() */ };
       const update = (key, val) => {
         data[key] = val;
         vscode.postMessage({channel: 'update', value: data});
@@ -198,6 +214,7 @@
 
       const root = document.getElementById('root');
       const title = document.getElementById('title');
+      const title_sub = document.getElementById('title-sub');
       const tabs = document.getElementById('tabs');
       
       const select_method = document.getElementById('select-method');
@@ -270,7 +287,23 @@
       button_add_header.onclick = () => addHeaderRow(data.headers.length);
 
       const input_body = document.getElementById('input-body');
-      input_body.onchange = (e) => update('body', e.target.value);
+      const body_errors = document.getElementById('body-errors');
+      const verifyBody = (str) => {
+        if (!str) return;
+        try {
+          JSON.parse(str);
+          body_errors.hidden = true;
+        } catch (error) {
+          console.error('Parsing body:', error);
+          body_errors.hidden = false;
+          body_errors.innerText = error.message;
+        }
+      }
+      input_body.onchange = (e) => {
+        update('body', e.target.value);
+        verifyBody(e.target.value);
+      }
+
 
 
       const json_errors = document.getElementById('json-errors');
@@ -278,7 +311,7 @@
 
 
       const setContents = () => {
-        title.innerText = data.label;
+        title.innerHTML = data.label;
         select_method.value = data.method ?? 'GET';
         input_url.value = data.url ?? '';
         input_auth.value = data.auth ?? '';
@@ -287,6 +320,7 @@
           data.headers.forEach((x, i) => addHeaderRow(i, {header: x.header, value: x.value}));
         } else addHeaderRow(0);
         input_body.value = data.body ?? '';
+        verifyBody(data.body);
         input_json.value = JSON.stringify(data, null, 2);
       }
 
@@ -310,11 +344,14 @@
       // -----------------
       (function() {
         window.addEventListener('message', event => { 
-          console.log('Message from webview:', event.data);
+          console.log('Message from host:', event.data);
           switch (event.data.channel) {
             case 'call-data':
               data = event.data.value;
               setContents();
+              break;
+            case 'transformed-url':
+              title_sub.innerHTML = `${data.method}&nbsp;&nbsp;&nbsp;${event.data.value}`;
               break;
           
             default: console.error('Unknown channel: ' + event.data.channel); break;

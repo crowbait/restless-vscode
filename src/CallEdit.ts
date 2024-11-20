@@ -2,7 +2,7 @@ import {readFileSync} from 'fs';
 import path from 'path';
 import * as vscode from 'vscode';
 import RESTCall from './Call';
-import {replaceRessources} from './WebViewHelpers';
+import {replaceRessources} from './helpers/WebViewHelpers';
 
 export class CallEdit {
   constructor(
@@ -29,23 +29,25 @@ export class CallEdit {
   destructor: () => void;
   webview: vscode.WebviewPanel;
 
-  webviewSendMessage = (message: any): void => {
+  private webviewSendMessage = (message: any): void => {
     console.log('Sending to webview', message);
     this.webview.webview.postMessage(message);
   };
-  webviewReceiveMessage = (message: any): void => {
+  private webviewReceiveMessage = (message: any): void => {
     console.log('Receiving from webview', message);
     switch (message.channel) {
       case 'event':
         switch (message.value) {
           case 'ready':
             this.webviewSendMessage({channel: 'call-data', value: this.call.getJsonObject()});
+            this.webviewSendMessage({channel: 'transformed-url', value: this.call.transformVariableStrings(this.call.url)});
             break;
         }
         break;
         
         case 'update':
           this.call.updateFromJsonObject(message.value);
+          this.webviewSendMessage({channel: 'transformed-url', value: this.call.transformVariableStrings(this.call.url)});
           this.call.provider.saveAndUpdate();
           break;
 
@@ -55,11 +57,11 @@ export class CallEdit {
           this.call.run();
           break;
 
-        default: console.error('Unknown channel: ' + message.data.channel); break;
+        default: console.error('Unknown channel: ' + message.channel); break;
     }
   };
 
-  getHTML = (): string => {
+  private getHTML = (): string => {
     const html = this.call.provider.context.asAbsolutePath(path.join('src', 'CallEdit.html'));
     return replaceRessources(readFileSync(html, 'utf8'), this.webview.webview, this.call.provider.context);
   };
