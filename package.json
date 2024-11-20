@@ -1,5 +1,6 @@
 {
   "name": "restless-http-rest-client",
+  "publisher": "Crowbait",
   "displayName": "RESTless - HTTP / REST Client",
   "description": "Integrated, flexible HTTP & REST client",
   "icon": "ressources/icon.png",
@@ -12,11 +13,26 @@
     "Other"
   ],
   "keywords": [
-    "api"
+    "api",
+    "rest",
+    "http",
+    "client"
   ],
   "activationEvents": [
     "onStartupFinished"
   ],
+  "license": "MIT",
+  "preview": true,
+  "sponsor": {
+    "url": "https://ko-fi.com/crowbait"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crowbait/restless-vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/crowbait/restless-vscode/issues"
+  },
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -141,7 +157,8 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.13.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vsce": "^2.15.0"
   },
   "dependencies": {
     "@vscode-elements/elements": "^1.8.0",
