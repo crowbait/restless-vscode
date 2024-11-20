@@ -51,7 +51,7 @@ class RESTCall extends ListEntry {
   body = defaults.body;
 
   run = (): void => {
-    console.log(`Running ${this.label}`);
+    this.provider.log.appendLine(`Running ${this.label}`);
     if (this.runView) {
       this.runView.webview.reveal();
       this.runView.run();
@@ -61,7 +61,7 @@ class RESTCall extends ListEntry {
   };
 
   edit = (): void => {
-    console.log(`Editing ${this.label}`);
+    this.provider.log.appendLine(`Editing ${this.label}`);
     if (this.editView) {
       this.editView.webview.reveal();
       return;
@@ -100,22 +100,22 @@ class RESTCall extends ListEntry {
 
 
 
+  err = (msg: string): void => {
+    this.provider.log.appendLine(msg);
+    vscode.window.showErrorMessage(msg);
+  };
+
   transformVariableStrings = (str: string): string => {
     const matches = /{{([^\s]+)\s"([^"]+)"(?:\s"([^"]+)")?}}/g.exec(str);
     const source = matches && matches[1];
     const arg1 = matches && matches[2];
     const arg2 = matches && matches[3];
 
-    const err = (msg: string): void => {
-      console.error(msg);
-      vscode.window.showErrorMessage(msg);
-    };
-
     if (matches && source) {
       switch (source) {
         case 'file':
           if (!arg1) {
-            err('File variable requires an argument');
+            this.err('File variable requires an argument');
             return str;
           }
           const filePath = path.join(vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '', arg1);
@@ -124,7 +124,7 @@ class RESTCall extends ListEntry {
 
         case 'env':
           if (!arg1) {
-            err('Env variable requires an argument');
+            this.err('Env variable requires an argument');
             return str;
           }
           str = str.replaceAll(matches[0], process.env[arg1] || '');
@@ -132,7 +132,7 @@ class RESTCall extends ListEntry {
 
         case '.env':
           if (!arg1 || !arg2) {
-            err('.env variable requires 2 arguments');
+            this.err('.env variable requires 2 arguments');
             return str;
           }
           const dotenvPath = path.join(vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '', arg1);

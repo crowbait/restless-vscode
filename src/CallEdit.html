@@ -258,7 +258,6 @@
         valInput.dataset.index = newIndex;
         buttonDelete.dataset.index = newIndex;
         buttonDelete.onclick = (e) => {
-          console.log(e.target);
           data.headers.splice(e.target.dataset.index, 1);
           table_header.replaceChildren();
           data.headers.forEach((x, i) => addHeaderRow(i, {header: x.header, value: x.value}));
@@ -267,7 +266,6 @@
         }
 
         headerInput.onchange = (e) => {
-          console.log(e);
           data.headers[parseInt(e.target.dataset.index)].header = e.target.value;
           vscode.postMessage({channel: 'update', value: data});
         }
@@ -294,7 +292,7 @@
           JSON.parse(str);
           body_errors.hidden = true;
         } catch (error) {
-          console.error('Parsing body:', error);
+          vscode.postMessage({channel: 'err', value: `Error parsing body: ${error.message}`});
           body_errors.hidden = false;
           body_errors.innerText = error.message;
         }
@@ -332,7 +330,7 @@
           setContents();
           vscode.postMessage({channel: 'update', value: data});
         } catch (error) {
-          console.error('Parsing JSON:', error);
+          vscode.postMessage({channel: 'err', value: `Error parsing JSON: ${error.message}`});
           json_errors.hidden = false;
           json_errors.innerText = error.message;
         }
@@ -344,7 +342,7 @@
       // -----------------
       (function() {
         window.addEventListener('message', event => { 
-          console.log('Message from host:', event.data);
+          vscode.postMessage({channel: 'log', value: `Message from host: ${JSON.stringify(event.data)}`});
           switch (event.data.channel) {
             case 'call-data':
               data = event.data.value;
@@ -354,7 +352,10 @@
               title_sub.innerHTML = `${data.method}&nbsp;&nbsp;&nbsp;${event.data.value}`;
               break;
           
-            default: console.error('Unknown channel: ' + event.data.channel); break;
+            default: 
+              console.error('Unknown channel: ' + event.data.channel); 
+              vscode.postMessage({channel: 'err', value: `Unknwnown channel: ${event.data.channel}`});
+              break;
           }
         });
 

@@ -291,7 +291,7 @@
       // -----------------
       (function() {
         window.addEventListener('message', event => { 
-          console.log('Message from host:', event.data);
+          vscode.postMessage({channel: 'log', value: `Message from host: ${JSON.stringify(event.data)}`});
           switch (event.data.channel) {
             case 'call-data':
               data = event.data.value;
@@ -300,7 +300,10 @@
               run();
               break;
           
-            default: console.error('Unknown channel: ' + event.data.channel); break;
+            default: 
+              console.error('Unknown channel: ' + event.data.channel); 
+              vscode.postMessage({channel: 'err', value: `Unknwnown channel: ${event.data.channel}`});
+              break;
           }
         });
 

@@ -30,11 +30,11 @@ export class CallEdit {
   webview: vscode.WebviewPanel;
 
   private webviewSendMessage = (message: any): void => {
-    console.log('Sending to webview', message);
+    this.call.provider.log.appendLine(`Sending to webview edit: ${JSON.stringify(message)}`);
     this.webview.webview.postMessage(message);
   };
   private webviewReceiveMessage = (message: any): void => {
-    console.log('Receiving from webview', message);
+    this.call.provider.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
     switch (message.channel) {
       case 'event':
         switch (message.value) {
@@ -44,6 +44,14 @@ export class CallEdit {
             break;
         }
         break;
+
+        case 'err':
+          this.call.err(message.value);
+          break;
+
+        case 'log':
+          this.call.provider.log.appendLine(message.value);
+          break;
         
         case 'update':
           this.call.updateFromJsonObject(message.value);
@@ -57,7 +65,7 @@ export class CallEdit {
           this.call.run();
           break;
 
-        default: console.error('Unknown channel: ' + message.channel); break;
+        default: this.call.err(`Unknown channel on edit: ${message.channel}`); break;
     }
   };
 

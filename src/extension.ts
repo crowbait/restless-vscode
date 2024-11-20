@@ -6,13 +6,14 @@ import ListEntry from './ListEntry';
 import TreeDataProvider from './TreeDataProvider';
 
 export function activate(context: vscode.ExtensionContext): void {
-	console.log(`${packageJson.name} running v.${packageJson.version}`);
+	const log = vscode.window.createOutputChannel('restless-http-rest-client');
+	log.appendLine(`${packageJson.name} running v.${packageJson.version}`);
 
 	const rootPath = (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0))
 		? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
 	if (!rootPath) return;
 
-	const treeProvider = new TreeDataProvider(context);
+	const treeProvider = new TreeDataProvider(context, log);
 
 	const getListEntry = (identifier: ListEntry['identifier']): RESTCall | Folder | undefined => treeProvider.currentList.find((x) => x.identifier === identifier);
 

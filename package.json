@@ -3,7 +3,7 @@
   "displayName": "RESTless - HTTP / REST Client",
   "description": "Integrated, flexible HTTP & REST client",
   "icon": "ressources/icon.png",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.95.0"
   },

@@ -7,13 +7,15 @@ import ListEntry, {IListEntryCore} from './ListEntry';
 
 class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.TreeDragAndDropController<ListEntry> {
   constructor(
-    context: vscode.ExtensionContext
+    context: vscode.ExtensionContext,
+    log: vscode.OutputChannel
   ) {
-    console.log('TreeDataProvider created');
+    this.log = log;
+    log.appendLine('TreeDataProvider created');
 
     this.context = context;
     this.filepath = path.join(vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '', '.vscode', 'restless.json');
-    console.log(this.filepath);
+    log.appendLine(`Loading from filepath: ${this.filepath}`);
     const view = vscode.window.createTreeView('restlessHttpRestClientView', {
 			treeDataProvider: this,
 			showCollapseAll: true,
@@ -23,6 +25,7 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
     context.subscriptions.push(view);
   }
 
+  log: vscode.OutputChannel;
   context: vscode.ExtensionContext;
   filepath: string;
   currentList: Array<RESTCall | Folder> = [];
@@ -51,7 +54,7 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
       const stored = JSON.parse(existsSync(this.filepath) ? readFileSync(this.filepath, 'utf-8') : '[]') as IListEntryCore[];
       const transformed = stored.map((x) => x.contextValue === 'call' ? new RESTCall(this, x as JSONCallObject) : new Folder(this, x));
       transformed.sort(ListEntry.sorter);
-      console.info('Read:', transformed);
+      this.log.appendLine(`Read saved list: ${JSON.stringify(stored)}`);
       this.currentList = transformed;
     }
     if (element) {

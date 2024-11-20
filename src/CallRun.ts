@@ -39,11 +39,11 @@ export class CallRun {
   };
 
   private webviewSendMessage = (message: any): void => {
-    console.log('Sending to webview', message);
+    this.call.provider.log.appendLine(`Sending to webview run: ${JSON.stringify(message)}`);
     this.webview.webview.postMessage(message);
   };
   private webviewReceiveMessage = (message: any): void => {
-    console.log('Receiving from webview', message);
+    this.call.provider.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
     switch (message.channel) {
       case 'event':
         switch (message.value) {
@@ -53,7 +53,15 @@ export class CallRun {
         }
         break;
 
-        default: console.error('Unknown channel: ' + message.channel); break;
+        case 'err':
+          this.call.err(message.value);
+          break;
+
+        case 'log':
+          this.call.provider.log.appendLine(message.value);
+          break;
+
+        default: this.call.err(`Unknown channel on run: ${message.channel}`); break;
     }
   };
 
