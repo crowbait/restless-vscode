@@ -144,7 +144,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "precompile": "npm run lint",
-    "watch": "tsc -watch -p ./",
+    "prepare": "husky",
     "lint": "eslint src --fix"
   },
   "devDependencies": {
@@ -157,6 +157,7 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.13.0",
+    "husky": "^9.1.7",
     "typescript": "^5.6.3",
     "vsce": "^2.15.0"
   },

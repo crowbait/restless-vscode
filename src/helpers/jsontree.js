@@ -1,4 +1,4 @@
-var JSONTree = (function() { // eslint-disable-line no-unused-vars
+var JSONTree = (function() {  
   var escapeMap = {
     '&': '&amp;',
     '<': '&lt;',
