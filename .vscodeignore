@@ -1,6 +1,5 @@
 .vscode/**
 .vscode-test/**
-src/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -9,3 +8,13 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+
+src/**
+!src/helpers/jsontree.css
+!src/helpers/jsontree.js
+!src/helpers/statusCodes.jspart
+!src/*.html
+
+node_modules
+!node_modules/@vscode-elements/elements/dist/*.js
+!node_modules/@vscode/codicons/dist
