@@ -144,6 +144,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "precompile": "npm run lint",
+    "deploy": "vsce publish",
     "prepare": "husky",
     "lint": "eslint src --fix"
   },
