@@ -36,10 +36,11 @@ class RESTCall extends ListEntry {
     const item = typeof json === 'string' ? JSON.parse(json) as JSONCallObject : json;
     this.updateFromJsonObject(item);
     if (this.url) this.tooltip = `${this.method}: ${this.url}`;
+    this.setIcon();
   }
 
   contextValue = 'call' as const;
-  iconPath = new vscode.ThemeIcon('globe');
+  iconPath: string | vscode.ThemeIcon = '';
   command = {title: 'Edit', command: 'restless-http-rest-client.editCall', arguments: [this]};
   editView: CallEdit | undefined;
   runView: CallRun | undefined;
@@ -96,6 +97,7 @@ class RESTCall extends ListEntry {
     this.auth = json.auth ?? defaults.auth;
     this.headers = json.headers ?? defaults.headers;
     this.body = json.body ?? defaults.body;
+    this.setIcon();
   };
 
 
@@ -158,6 +160,10 @@ class RESTCall extends ListEntry {
       return str;
     }
     return this.transformVariableStrings(str);
+  };
+
+  setIcon = (): void => {
+    this.iconPath = this.provider.context.asAbsolutePath(`ressources/method_${this.method.toLowerCase()}.svg`);
   };
 }
 

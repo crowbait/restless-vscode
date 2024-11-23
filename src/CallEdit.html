@@ -220,7 +220,7 @@
       const select_method = document.getElementById('select-method');
       select_method.onchange = (e) => {
         const value = e.target.value;
-        if (!['HEAD', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'TRACE', 'CONNECT', 'OPTIONS'].includes(value)) value = 'GET';
+        if (!['HEAD', 'GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'TRACE', 'CONNECT', 'OPTIONS', 'SEARCH'].includes(value)) value = 'GET';
         update('method', value);
       }
       const input_url = document.getElementById('input-url');

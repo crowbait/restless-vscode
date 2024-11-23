@@ -4,7 +4,7 @@
   "displayName": "RESTless - HTTP / REST Client",
   "description": "Integrated, flexible HTTP & REST client",
   "icon": "ressources/icon.png",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -146,6 +146,7 @@
     "bundle": "node build.js --production",
     "precompile": "npm run lint",
     "compile": "npm run check-types && npm run bundle",
+    "compile-debug": "tsc -p ./",
     "deploy": "vsce publish",
     "prepare": "husky",
     "lint": "eslint src --fix"
