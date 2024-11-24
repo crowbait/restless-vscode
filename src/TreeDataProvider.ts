@@ -29,6 +29,7 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
   context: vscode.ExtensionContext;
   filepath: string;
   currentList: Array<RESTCall | Folder> = [];
+  lastUpdate: number = Date.now();
 
   dropMimeTypes = ['application/vnd.code.tree.restlessHttpRestClientView'];
 	dragMimeTypes = [];
@@ -36,13 +37,22 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
 	readonly onDidChangeTreeData: vscode.Event<ListEntry | undefined | void> = this._onDidChangeTreeData.event;
 
   refresh = (): void => {
-    // this.currentList = [];
     this._onDidChangeTreeData.fire();
+  };
+
+  refreshFromFile = (): void => {
+    if (Date.now() - this.lastUpdate > 500) { // only refresh if last update was at least half a second ago to not get into a loop with itself
+      this.lastUpdate = Date.now();
+      this.currentList = [];
+      this.refresh();
+      console.log('refreshing from file');
+    }
   };
 
   save = (): void => {
     mkdirSync(dirname(this.filepath), {recursive: true});
     writeFileSync(this.filepath, JSON.stringify(this.currentList.map((x) => x.getJsonObject()), null, 2), 'utf-8');
+    this.lastUpdate = Date.now(); // only refresh if last update was at least half a second ago to not get into a loop with itself
   };
   saveAndUpdate = (): void => {
     this.save();

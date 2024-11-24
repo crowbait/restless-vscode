@@ -40,6 +40,10 @@ export function activate(context: vscode.ExtensionContext): void {
 	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
 		treeProvider.refresh();
 	}));
+
+	const fileSystemWatcher = vscode.workspace.createFileSystemWatcher(treeProvider.filepath);
+	fileSystemWatcher.onDidChange(treeProvider.refreshFromFile);
+	context.subscriptions.push(fileSystemWatcher);
 }
 
 // This method is called when your extension is deactivated
