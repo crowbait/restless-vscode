@@ -17,8 +17,16 @@ export function activate(context: vscode.ExtensionContext): void {
 
 	const getListEntry = (identifier: ListEntry['identifier']): RESTCall | Folder | undefined => treeProvider.currentList.find((x) => x.identifier === identifier);
 
-	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.addCall', (e?: Folder) => treeProvider.addItemToList('call', e)));
-	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.addFolder', (e?: Folder) => treeProvider.addItemToList('folder', e)));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.addCall', async (e?: Folder) => {
+		let ret: string | undefined = undefined;
+		ret = await treeProvider.addItemToList('call', e);
+		return ret;
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.addFolder', async (e?: Folder) => {
+		let ret: string | undefined = undefined;
+		ret = await treeProvider.addItemToList('folder', e);
+		return ret;
+	}));
 	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.renameEntry', (e) => {
 		const element = getListEntry(e.identifier);
 		if (element) element.rename();
@@ -39,7 +47,7 @@ export function activate(context: vscode.ExtensionContext): void {
 	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.refresh', () => treeProvider.refreshFromFile()));
 
 	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
-		treeProvider.refresh();
+		treeProvider.refreshFromFile();
 	}));
 
 	const fileSystemWatcher = vscode.workspace.createFileSystemWatcher(treeProvider.filepath);

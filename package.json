@@ -39,39 +39,67 @@
       {
         "command": "restless-http-rest-client.addCall",
         "title": "Add Request",
-        "icon": "$(add)"
+        "icon": "$(add)",
+        "category": "RESTless"
       },
       {
         "command": "restless-http-rest-client.addFolder",
         "title": "Add Folder",
-        "icon": "$(folder)"
+        "icon": "$(folder)",
+        "category": "RESTless"
       },
       {
         "command": "restless-http-rest-client.renameEntry",
         "title": "Rename",
-        "icon": "$(pencil)"
+        "icon": "$(pencil)",
+        "category": "RESTless"
       },
       {
         "command": "restless-http-rest-client.deleteEntry",
         "title": "Delete",
-        "icon": "$(trash)"
+        "icon": "$(trash)",
+        "category": "RESTless"
       },
       {
         "command": "restless-http-rest-client.runCall",
         "title": "Run",
-        "icon": "$(run)"
+        "icon": "$(run)",
+        "category": "RESTless"
       },
       {
         "command": "restless-http-rest-client.editCall",
-        "title": "Edit"
+        "title": "Edit",
+        "category": "RESTless"
       },
       {
         "command": "restless-http-rest-client.refresh",
         "title": "Refresh",
-        "icon": "$(refresh)"
+        "icon": "$(refresh)",
+        "category": "RESTless"
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "restless-http-rest-client.editCall",
+          "when": "false"
+        },
+        {
+          "command": "restless-http-rest-client.runCall",
+          "when": "false"
+        },
+        {
+          "command": "restless-http-rest-client.renameEntry",
+          "when": "false"
+        },
+        {
+          "command": "restless-http-rest-client.deleteEntry",
+          "when": "false"
+        },
+        {"command": "restless-http-rest-client.addCall"},
+        {"command": "restless-http-rest-client.addFolder"},
+        {"command": "restless-http-rest-client.refresh"}
+      ],
       "view/title": [
         {
           "command": "restless-http-rest-client.addCall",

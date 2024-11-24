@@ -75,9 +75,9 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
     return Promise.resolve(this.currentList.filter((x) => !x.folderPath));
   };
 
-  addItemToList = async (contextValue: ListEntry['contextValue'], folder?: Folder): Promise<void> => {
+  addItemToList = async (contextValue: ListEntry['contextValue'], folder?: Folder): Promise<string | undefined> => {
     const name = await vscode.window.showInputBox({prompt: 'Enter name'});
-    if (!name) return undefined as any;
+    if (!name) return undefined;
     const data: IListEntryCore = {
       contextValue: contextValue,
       identifier: ListEntry.createIdentifier(name, this.currentList),
@@ -89,6 +89,7 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
     this.currentList.sort(ListEntry.sorter);
     this.saveAndUpdate();
     if (item.contextValue === 'call') item.edit();
+    return name;
   };
 
   handleDrop = async (target: ListEntry | undefined, sources: vscode.DataTransfer): Promise<void> => {
