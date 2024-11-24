@@ -1,3 +1,18 @@
+# [0.3.0](https://github.com/crowbait/restless-vscode/compare/v0.2.0...v0.3.0) (2024-11-24)
+
+
+### Bug Fixes
+
+* command palette visibility per command ([689023b](https://github.com/crowbait/restless-vscode/commit/689023b80a587e111af1219718f317840dcd25d2))
+
+
+### Features
+
+* automatic refresh on file changes ([2ed2694](https://github.com/crowbait/restless-vscode/commit/2ed26946d9dfb3a3a6146058099118529203040c))
+* refresh command ([df6f4a3](https://github.com/crowbait/restless-vscode/commit/df6f4a3433bcf76ebdb26c16923246b462e7b8ae))
+
+
+
 # [0.2.0](https://github.com/crowbait/restless-vscode/compare/v0.0.1...v0.2.0) (2024-11-23)
 
 

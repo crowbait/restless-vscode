@@ -4,7 +4,7 @@
   "displayName": "RESTless - HTTP / REST Client",
   "description": "Integrated, flexible HTTP & REST client",
   "icon": "ressources/icon.png",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -96,9 +96,15 @@
           "command": "restless-http-rest-client.deleteEntry",
           "when": "false"
         },
-        {"command": "restless-http-rest-client.addCall"},
-        {"command": "restless-http-rest-client.addFolder"},
-        {"command": "restless-http-rest-client.refresh"}
+        {
+          "command": "restless-http-rest-client.addCall"
+        },
+        {
+          "command": "restless-http-rest-client.addFolder"
+        },
+        {
+          "command": "restless-http-rest-client.refresh"
+        }
       ],
       "view/title": [
         {
