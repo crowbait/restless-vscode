@@ -45,7 +45,6 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
       this.lastUpdate = Date.now();
       this.currentList = [];
       this.refresh();
-      console.log('refreshing from file');
     }
   };
 

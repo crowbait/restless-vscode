@@ -64,6 +64,11 @@
       {
         "command": "restless-http-rest-client.editCall",
         "title": "Edit"
+      },
+      {
+        "command": "restless-http-rest-client.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -77,6 +82,12 @@
         {
           "command": "restless-http-rest-client.addFolder",
           "title": "Add Folder",
+          "when": "view == restlessHttpRestClientView",
+          "group": "navigation"
+        },
+        {
+          "command": "restless-http-rest-client.refresh",
+          "title": "Refresh",
           "when": "view == restlessHttpRestClientView",
           "group": "navigation"
         }

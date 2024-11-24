@@ -36,6 +36,7 @@ export function activate(context: vscode.ExtensionContext): void {
 		const call = getListEntry(e.identifier);
 		if (call && call.contextValue === 'call') call.edit();
 	}));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.refresh', () => treeProvider.refreshFromFile()));
 
 	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
 		treeProvider.refresh();
