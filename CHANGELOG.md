@@ -1,3 +1,12 @@
+# [0.4.0](https://github.com/crowbait/restless-vscode/compare/v0.3.0...v0.4.0) (2024-12-07)
+
+
+### Features
+
+* temporary call ([2014080](https://github.com/crowbait/restless-vscode/commit/2014080067ab61ce41d6befed4eadda96a1bcd75))
+
+
+
 # [0.3.0](https://github.com/crowbait/restless-vscode/compare/v0.2.0...v0.3.0) (2024-11-24)
 
 
