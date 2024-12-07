@@ -2,46 +2,24 @@ import {readFileSync} from 'fs';
 import parseEnv from 'parse-dotenv';
 import path from 'path';
 import * as vscode from 'vscode';
+import {callDefaults, JSONCallObject} from './Call';
 import {CallEdit} from './CallEdit';
 import {CallRun} from './CallRun';
-import ListEntry from './ListEntry';
-import TreeDataProvider from './TreeDataProvider';
 
-export const callDefaults: {
-  url: string
-  method: 'HEAD' | 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'TRACE' | 'CONNECT' | 'OPTIONS' | 'SEARCH'
-  auth: string
-  headers: Array<{header: string, value: string}>
-  body: string
-} = {
-  url: '',
-  method: 'GET',
-  auth: '',
-  headers: [{header: 'Content-Type', value: 'application/json'}],
-  body: ''
-};
-export type JSONCallObject = {
-  contextValue: 'call'
-  identifier: string
-  label: string
-  folderPath?: string
-} & typeof callDefaults;
+export const tempCallVscodeStateKey = 'tempCall';
 
-class RESTCall extends ListEntry {
-  constructor(
-    provider: TreeDataProvider,
-    json: string | JSONCallObject
-  ) {
-    super(provider, json);
-    const item = typeof json === 'string' ? JSON.parse(json) as JSONCallObject : json;
-    this.updateFromJsonObject(item);
-    if (this.url) this.tooltip = `${this.method}: ${this.url}`;
-    this.setIcon();
+class RESTCall_Temporary {
+  constructor(context: vscode.ExtensionContext, log: vscode.OutputChannel, data?: JSONCallObject) {
+    this.context = context;
+    this.log = log;
+    this.updateFromJsonObject(data ?? callDefaults);
   }
 
-  contextValue = 'call' as const;
-  iconPath: string | vscode.ThemeIcon = '';
-  command = {title: 'Edit', command: 'restless-http-rest-client.editCall', arguments: [this]};
+  identifier = 'call_temporary';
+  label = 'REST Call';
+
+  context: vscode.ExtensionContext;
+  log: vscode.OutputChannel;
   editView: CallEdit | undefined;
   runView: CallRun | undefined;
 
@@ -52,7 +30,7 @@ class RESTCall extends ListEntry {
   body = callDefaults.body;
 
   run = (): void => {
-    this.provider.log.appendLine(`Running ${this.label}`);
+    this.log.appendLine(`Running ${this.label}`);
     if (this.runView) {
       this.runView.webview.reveal();
       this.runView.run();
@@ -62,7 +40,7 @@ class RESTCall extends ListEntry {
   };
 
   edit = (): void => {
-    this.provider.log.appendLine(`Editing ${this.label}`);
+    this.log.appendLine(`Editing ${this.label}`);
     if (this.editView) {
       this.editView.webview.reveal();
       return;
@@ -70,20 +48,11 @@ class RESTCall extends ListEntry {
     this.editView = new CallEdit(this, () => this.editView = undefined);
   };
 
-  /** Deletes itself from list only if called without arguments. Otherwise, returns it's ID for bundled call. */
-  async delete(called?: boolean): Promise<string> {
-    if (!called) {
-      this.provider.currentList = this.provider.currentList.filter((x) => x.identifier !== this.identifier);
-      this.provider.saveAndUpdate();
-    }
-    return this.identifier;
-  }
-
   getJsonObject = (): JSONCallObject => ({
-    contextValue: this.contextValue,
+    contextValue: 'call',
     identifier: this.identifier,
     label: this.label,
-    folderPath: this.folderPath,
+    folderPath: undefined,
 
     url: this.url ?? callDefaults.url,
     method: this.method ?? callDefaults.method,
@@ -97,14 +66,15 @@ class RESTCall extends ListEntry {
     this.auth = json.auth ?? callDefaults.auth;
     this.headers = json.headers ?? callDefaults.headers;
     this.body = json.body ?? callDefaults.body;
-    this.setIcon();
   };
-  saveAndUpdate = (): void => this.provider.saveAndUpdate();
+  saveAndUpdate = (): void => {
+    this.context.globalState.update(tempCallVscodeStateKey, this.getJsonObject());
+  };
 
 
 
   err = (msg: string): void => {
-    this.provider.log.appendLine(msg);
+    this.log.appendLine(msg);
     vscode.window.showErrorMessage(msg);
   };
 
@@ -162,10 +132,6 @@ class RESTCall extends ListEntry {
     }
     return this.transformVariableStrings(str);
   };
-
-  setIcon = (): void => {
-    this.iconPath = this.provider.context.asAbsolutePath(`ressources/method_${this.method.toLowerCase()}.svg`);
-  };
 }
 
-export default RESTCall;
+export default RESTCall_Temporary;

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import packageJson from '../package.json';
-import RESTCall from './Call';
+import RESTCall, {JSONCallObject} from './Call';
+import RESTCall_Temporary, {tempCallVscodeStateKey} from './Call-Temporary';
 import Folder from './Folder';
 import ListEntry from './ListEntry';
 import TreeDataProvider from './TreeDataProvider';
@@ -14,6 +15,8 @@ export function activate(context: vscode.ExtensionContext): void {
 	if (!rootPath) return;
 
 	const treeProvider = new TreeDataProvider(context, log);
+  context.globalState.setKeysForSync([tempCallVscodeStateKey]);
+	let tempCall: RESTCall_Temporary | undefined = undefined;
 
 	const getListEntry = (identifier: ListEntry['identifier']): RESTCall | Folder | undefined => treeProvider.currentList.find((x) => x.identifier === identifier);
 
@@ -45,6 +48,17 @@ export function activate(context: vscode.ExtensionContext): void {
 		if (call && call.contextValue === 'call') call.edit();
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.refresh', () => treeProvider.refreshFromFile()));
+
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.openTemporary', () => {
+		const openCall = (call: RESTCall_Temporary): void => call.edit();
+		if (tempCall) {
+			openCall(tempCall);
+		} else {
+			const readCall = context.globalState.get<JSONCallObject>(tempCallVscodeStateKey);
+			tempCall = new RESTCall_Temporary(context, log, readCall);
+			openCall(tempCall);
+		}
+	}));
 
 	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
 		treeProvider.refreshFromFile();

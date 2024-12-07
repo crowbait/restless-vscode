@@ -2,11 +2,12 @@ import {readFileSync} from 'fs';
 import path from 'path';
 import * as vscode from 'vscode';
 import RESTCall from './Call';
+import RESTCall_Temporary from './Call-Temporary';
 import {replaceRessources} from './helpers/WebViewHelpers';
 
 export class CallEdit {
   constructor(
-    call: RESTCall,
+    call: RESTCall | RESTCall_Temporary,
     destructor: () => void
   ) {
     this.call = call;
@@ -21,20 +22,27 @@ export class CallEdit {
       }
     );
     this.webview.onDidDispose(this.destructor);
-    this.webview.webview.html = this.getHTML();
     this.webview.webview.onDidReceiveMessage(this.webviewReceiveMessage);
+    if (call.identifier === 'call_temporary') {
+      this.webview.webview.html = this.getHTML((call as RESTCall_Temporary).context);
+      this.log = (call as RESTCall_Temporary).log;
+    } else {
+      this.webview.webview.html = this.getHTML((call as RESTCall).provider.context);
+      this.log = (call as RESTCall).provider.log;
+    }
   }
 
-  call: RESTCall;
+  call: RESTCall | RESTCall_Temporary;
+  log: vscode.OutputChannel;
   destructor: () => void;
   webview: vscode.WebviewPanel;
 
   private webviewSendMessage = (message: any): void => {
-    this.call.provider.log.appendLine(`Sending to webview edit: ${JSON.stringify(message)}`);
+    this.log.appendLine(`Sending to webview edit: ${JSON.stringify(message)}`);
     this.webview.webview.postMessage(message);
   };
   private webviewReceiveMessage = (message: any): void => {
-    this.call.provider.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
+    this.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
     switch (message.channel) {
       case 'event':
         switch (message.value) {
@@ -50,18 +58,18 @@ export class CallEdit {
           break;
 
         case 'log':
-          this.call.provider.log.appendLine(message.value);
+          this.log.appendLine(message.value);
           break;
         
         case 'update':
           this.call.updateFromJsonObject(message.value);
           this.webviewSendMessage({channel: 'transformed-url', value: this.call.transformVariableStrings(this.call.url)});
-          this.call.provider.saveAndUpdate();
+          this.call.saveAndUpdate();
           break;
 
         case 'run':
           this.call.updateFromJsonObject(message.value);
-          this.call.provider.saveAndUpdate();
+          this.call.saveAndUpdate();
           this.call.run();
           break;
 
@@ -69,8 +77,8 @@ export class CallEdit {
     }
   };
 
-  private getHTML = (): string => {
-    const html = this.call.provider.context.asAbsolutePath(path.join('src', 'CallEdit.html'));
-    return replaceRessources(readFileSync(html, 'utf8'), this.webview.webview, this.call.provider.context);
+  private getHTML = (context: vscode.ExtensionContext): string => {
+    const html = context.asAbsolutePath(path.join('src', 'CallEdit.html'));
+    return replaceRessources(readFileSync(html, 'utf8'), this.webview.webview, context);
   };
 }

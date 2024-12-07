@@ -13,6 +13,7 @@ It also supports externally sourced variables for high flexibility and keeping s
 - Saves your configured HTTP calls to the workspace so you can share your tests
 - Neatly arranged in a nested, browsable tree structure with drag-and-drop reordering
 - View response as dynamic (collapsible) JSON structure or rendered HTML where applicable; view raw if you want to
+- 1 "temporary" call, which does not get saved to the workspace list and is synced between your VSCcode instances (open via button on top of call list)
 
 ## Variables
 

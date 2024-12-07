@@ -2,11 +2,12 @@ import {readFileSync} from 'fs';
 import path from 'path';
 import * as vscode from 'vscode';
 import RESTCall from './Call';
+import RESTCall_Temporary from './Call-Temporary';
 import {replaceHtmlParts, replaceRessources} from './helpers/WebViewHelpers';
 
 export class CallRun {
   constructor(
-    call: RESTCall,
+    call: RESTCall | RESTCall_Temporary,
     destructor: () => void
   ) {
     this.call = call;
@@ -21,11 +22,18 @@ export class CallRun {
       }
     );
     this.webview.onDidDispose(this.destructor);
-    this.webview.webview.html = this.getHTML();
     this.webview.webview.onDidReceiveMessage(this.webviewReceiveMessage);
+    if (call.identifier === 'call_temporary') {
+      this.webview.webview.html = this.getHTML((call as RESTCall_Temporary).context);
+      this.log = (call as RESTCall_Temporary).log;
+    } else {
+      this.webview.webview.html = this.getHTML((call as RESTCall).provider.context);
+      this.log = (call as RESTCall).provider.log;
+    }
   }
 
-  call: RESTCall;
+  call: RESTCall | RESTCall_Temporary;
+  log: vscode.OutputChannel;
   destructor: () => void;
   webview: vscode.WebviewPanel;
 
@@ -39,11 +47,11 @@ export class CallRun {
   };
 
   private webviewSendMessage = (message: any): void => {
-    this.call.provider.log.appendLine(`Sending to webview run: ${JSON.stringify(message)}`);
+    this.log.appendLine(`Sending to webview run: ${JSON.stringify(message)}`);
     this.webview.webview.postMessage(message);
   };
   private webviewReceiveMessage = (message: any): void => {
-    this.call.provider.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
+    this.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
     switch (message.channel) {
       case 'event':
         switch (message.value) {
@@ -58,17 +66,17 @@ export class CallRun {
           break;
 
         case 'log':
-          this.call.provider.log.appendLine(message.value);
+          this.log.appendLine(message.value);
           break;
 
         default: this.call.err(`Unknown channel on run: ${message.channel}`); break;
     }
   };
 
-  private getHTML = (): string => {
-    let html = readFileSync(this.call.provider.context.asAbsolutePath(path.join('src', 'CallRun.html')), 'utf-8');
-    html = replaceRessources(html, this.webview.webview, this.call.provider.context);
-    html = replaceHtmlParts(html, this.call.provider.context);
+  private getHTML = (context: vscode.ExtensionContext): string => {
+    let html = readFileSync(context.asAbsolutePath(path.join('src', 'CallRun.html')), 'utf-8');
+    html = replaceRessources(html, this.webview.webview, context);
+    html = replaceHtmlParts(html, context);
     return html;
   };
 }

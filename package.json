@@ -76,6 +76,12 @@
         "title": "Refresh",
         "icon": "$(refresh)",
         "category": "RESTless"
+      },
+      {
+        "command": "restless-http-rest-client.openTemporary",
+        "title": "Open Temporary Call",
+        "icon": "$(watch)",
+        "category": "RESTless"
       }
     ],
     "menus": {
@@ -104,6 +110,9 @@
         },
         {
           "command": "restless-http-rest-client.refresh"
+        },
+        {
+          "command": "restless-http-rest-client.openTemporary"
         }
       ],
       "view/title": [
@@ -122,6 +131,12 @@
         {
           "command": "restless-http-rest-client.refresh",
           "title": "Refresh",
+          "when": "view == restlessHttpRestClientView",
+          "group": "navigation"
+        },
+        {
+          "command": "restless-http-rest-client.openTemporary",
+          "title": "Open Temporary Call",
           "when": "view == restlessHttpRestClientView",
           "group": "navigation"
         }
