@@ -22,7 +22,7 @@
     "onStartupFinished"
   ],
   "license": "MIT",
-  "preview": true,
+  "preview": false,
   "sponsor": {
     "url": "https://ko-fi.com/crowbait"
   },
