@@ -40,13 +40,16 @@
         display: flex;
         flex-direction: row;
         gap: 1rem;
+        justify-content: space-between;
         align-items: center;
         font-size: 1.5rem;
         font-family: var(--vscode-editor-font-family);
       }
+      #status-container * {
+        flex-grow: 0;
+        flex-shrink: 0;
+      }
       #status-container #status {
-        flex-grow: 1;
-        flex-shrink: 1;
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -78,10 +81,6 @@
       #status-container #status.error>span {
         color: lightcoral;
         background: darkred;
-      }
-      #status-container #timeSpan {
-        flex-grow: 0;
-        flex-shrink: 0;
       }
 
       #container-results {
@@ -147,17 +146,25 @@
 
         const setCommonParts = (status, message) => {
           clearInterval(timekeeper);
+
           const statusContainer = document.createElement('div');
-          statusContainer.id="status-container";
+          statusContainer.id = "status-container";
           const statusSpan = document.createElement('span');
           const severity = status === 'Error' ? 'error' : status < 300 ? 'ok' : status < 400 ? 'warning' : 'error';
-          statusSpan.id="status";
+          statusSpan.id = "status";
           statusSpan.classList.add(severity);
           statusSpan.innerHTML = `${status}: <span>${message ?? statusCodes[status]?.message}</span>`;
           statusContainer.appendChild(statusSpan);
 
+          const button_run = document.createElement('vscode-button');
+          button_run.id = 'button-run';
+          button_run.setAttribute('icon', 'run');
+          button_run.innerText = 'Run again';
+          button_run.onclick = () => run();
+          statusContainer.appendChild(button_run);
+
           const timeSpan = document.createElement('span');
-          timeSpan.id="timeSpan";
+          timeSpan.id = "timeSpan";
           const seconds = ((new Date() - start) / 1000);
           timeSpan.innerHTML = seconds > 10 ? `${seconds.toFixed(1)} s` : `${(seconds * 1000).toFixed(0)} ms`;
           statusContainer.appendChild(timeSpan);
