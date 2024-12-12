@@ -72,6 +72,12 @@
         "category": "RESTless"
       },
       {
+        "command": "restless-http-rest-client.duplicateCall",
+        "title": "Duplicate",
+        "icon": "$(copy)",
+        "category": "RESTless"
+      },
+      {
         "command": "restless-http-rest-client.refresh",
         "title": "Refresh",
         "icon": "$(refresh)",
@@ -100,6 +106,10 @@
         },
         {
           "command": "restless-http-rest-client.deleteEntry",
+          "when": "false"
+        },
+        {
+          "command": "restless-http-rest-client.duplicateCall",
           "when": "false"
         },
         {
@@ -169,6 +179,12 @@
         {
           "command": "restless-http-rest-client.runCall",
           "title": "Run",
+          "when": "view == restlessHttpRestClientView && viewItem == call",
+          "group": "inline"
+        },
+        {
+          "command": "restless-http-rest-client.duplicateCall",
+          "title": "Duplicate",
           "when": "view == restlessHttpRestClientView && viewItem == call",
           "group": "inline"
         }

@@ -79,6 +79,18 @@ class RESTCall extends ListEntry {
     return this.identifier;
   }
 
+  async duplicate(): Promise<void> {
+    const newName = await vscode.window.showInputBox({prompt: 'Enter name', value: this.label});
+    if (!newName) return undefined;
+    const newItem = new RESTCall(this.provider, {
+      ...this.getJsonObject(),
+      label: newName,
+      identifier: ListEntry.createIdentifier(newName, this.provider.currentList)
+    });
+    this.provider.currentList.push(newItem);
+    this.provider.saveAndUpdate();
+  }
+
   getJsonObject = (): JSONCallObject => ({
     contextValue: this.contextValue,
     identifier: this.identifier,

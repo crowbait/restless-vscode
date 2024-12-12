@@ -47,8 +47,12 @@ export function activate(context: vscode.ExtensionContext): void {
 		const call = getListEntry(e.identifier);
 		if (call && call.contextValue === 'call') call.edit();
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.refresh', () => treeProvider.refreshFromFile()));
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.duplicateCall', (e) => {
+		const call = getListEntry(e.identifier);
+		if (call && call.contextValue === 'call') call.duplicate();
+	}));
 
+	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.refresh', () => treeProvider.refreshFromFile()));
 	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.openTemporary', () => {
 		const openCall = (call: RESTCall_Temporary): void => call.edit();
 		if (tempCall) {
