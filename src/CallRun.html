@@ -194,21 +194,28 @@
           }
 
           const createHeadersTable = (headers) => {
-            const table = document.createElement('vscode-table');
-            const tableBody = document.createElement('vscode-table-body');
-            tableBody.slot = 'body';
-            headers.forEach((x, i) => {
-              const row = document.createElement('vscode-table-row');
-              const cellHeader = document.createElement('vscode-table-cell');
-              cellHeader.innerText = i;
-              const cellValue = document.createElement('vscode-table-cell');
-              cellValue.innerText = x;
-              row.appendChild(cellHeader);
-              row.appendChild(cellValue);
-              tableBody.appendChild(row);
-            })
-            table.appendChild(tableBody);
-            return table;
+            if (headers.keys().toArray().length > 0) {
+              const table = document.createElement('vscode-table');
+              const tableBody = document.createElement('vscode-table-body');
+              tableBody.slot = 'body';
+              headers.forEach((x, i) => {
+                const row = document.createElement('vscode-table-row');
+                const cellHeader = document.createElement('vscode-table-cell');
+                cellHeader.innerText = i;
+                const cellValue = document.createElement('vscode-table-cell');
+                cellValue.innerText = x;
+                row.appendChild(cellHeader);
+                row.appendChild(cellValue);
+                tableBody.appendChild(row);
+              });
+              table.appendChild(tableBody);
+              return table;
+            } else {
+              const headersWrapper = document.createElement('div');
+              headersWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; font-style: italic;';
+              headersWrapper.innerText = 'No headers';
+              return headersWrapper;
+            }
           }
 
           const createBodyField = (body, raw) => {
