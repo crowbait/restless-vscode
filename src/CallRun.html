@@ -138,10 +138,10 @@
         if (data.auth) headers.set('Authorization', data.auth);
         data.headers.forEach((x, i) => headers.set(x.header, x.value));
 
-        let done = new Date();
-        const start = new Date();
+        let done = 0;
+        const start = Date.now();
         const timekeeper = setInterval(() => {
-          timekeeperSpan.innerText = `${((new Date() - start) / 1000).toFixed(1)} s`;	
+          timekeeperSpan.innerText = `${((Date.now() - start) / 1000).toFixed(1)} s`;	
         }, 100);
 
         const setCommonParts = (status, message) => {
@@ -165,7 +165,7 @@
 
           const timeSpan = document.createElement('span');
           timeSpan.id = "timeSpan";
-          const seconds = ((new Date() - start) / 1000);
+          const seconds = ((done - start) / 1000);
           timeSpan.innerHTML = seconds > 10 ? `${seconds.toFixed(1)} s` : `${(seconds * 1000).toFixed(0)} ms`;
           statusContainer.appendChild(timeSpan);
 
@@ -180,7 +180,7 @@
             headers: headers,
             body: data.body ? data.body : undefined
           });
-          done = new Date();
+          done = Date.now();
           setCommonParts(response.status);
 
           const createCollapsible = (title, content, open) => {
@@ -292,7 +292,7 @@
           responseContainer.appendChild(responseTabs);
           containerResults.appendChild(responseContainer);
         } catch (error) {
-          done = new Date();
+          done = date.now();
           setCommonParts('Error', error.message);
         }
 
