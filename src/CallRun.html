@@ -175,7 +175,16 @@
 
 
         try {
-          const response = await fetch(data.url, {
+          const createCachebuster = (url) => {
+            let ret = '';
+            if (url.includes('?')) {
+              ret = `${url}&${Date.now().toString().substring(7)}`;
+            } else ret = `${url}?${Date.now().toString().substring(7)}`;
+            title_sub.innerHTML = `${data.method}&nbsp;&nbsp;&nbsp;${ret}`;
+            return ret;
+          }
+          const response = await fetch(
+            data.bustCache ? createCachebuster(data.url) : data.url, {
             method: data.method,
             headers: headers,
             body: data.body ? data.body : undefined

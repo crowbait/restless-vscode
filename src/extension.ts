@@ -53,6 +53,7 @@ export function activate(context: vscode.ExtensionContext): void {
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.refresh', () => treeProvider.refreshFromFile()));
+	
 	context.subscriptions.push(vscode.commands.registerCommand('restless-http-rest-client.openTemporary', () => {
 		const openCall = (call: RESTCall_Temporary): void => call.edit();
 		if (tempCall) {

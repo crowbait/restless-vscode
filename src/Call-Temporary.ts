@@ -28,6 +28,7 @@ class RESTCall_Temporary {
   auth = callDefaults.auth;
   headers = callDefaults.headers;
   body = callDefaults.body;
+  bustCache = callDefaults.bustCache;
 
   run = (): void => {
     this.log.appendLine(`Running ${this.label}`);
@@ -58,7 +59,8 @@ class RESTCall_Temporary {
     method: this.method ?? callDefaults.method,
     auth: this.auth ?? callDefaults.auth,
     headers: !this.headers ? callDefaults.headers : this.headers.filter((x) => x.header && x.value),
-    body: this.body ?? callDefaults.body
+    body: this.body ?? callDefaults.body,
+    bustCache: this.bustCache ?? callDefaults.bustCache
   });
   updateFromJsonObject = (json: Partial<JSONCallObject>): void => {
     this.url = json.url ?? callDefaults.url;
@@ -66,6 +68,7 @@ class RESTCall_Temporary {
     this.auth = json.auth ?? callDefaults.auth;
     this.headers = json.headers ?? callDefaults.headers;
     this.body = json.body ?? callDefaults.body;
+    this.bustCache = json.bustCache ?? callDefaults.bustCache;
   };
   saveAndUpdate = (): void => {
     this.context.globalState.update(tempCallVscodeStateKey, this.getJsonObject());

@@ -92,103 +92,106 @@
       <vscode-tabs id="tabs">
         <vscode-tab-header slot="header">UI</vscode-tab-header>
         <vscode-tab-panel>
-          <div id="container-url">
-          <vscode-single-select id="select-method" placeholder="Method" combobox>
-            <vscode-option>HEAD</vscode-option>
-            <vscode-option>GET</vscode-option>
-            <vscode-option>POST</vscode-option>
-            <vscode-option>PUT</vscode-option>
-            <vscode-option>DELETE</vscode-option>
-            <vscode-option>PATCH</vscode-option>
-            <vscode-option>TRACE</vscode-option>
-            <vscode-option>CONNECT</vscode-option>
-            <vscode-option>OPTIONS</vscode-option>
-            <vscode-option>SEARCH</vscode-option>
-          </vscode-single-select>
-          <vscode-textfield id="input-url" placeholder="URL"></vscode-textfield>
-          <spacer></spacer>
-          <vscode-button id="button-run" icon="run">Run</vscode-button>
-        </div>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem">
+            <div id="container-url">
+              <vscode-single-select id="select-method" placeholder="Method" combobox>
+                <vscode-option>HEAD</vscode-option>
+                <vscode-option>GET</vscode-option>
+                <vscode-option>POST</vscode-option>
+                <vscode-option>PUT</vscode-option>
+                <vscode-option>DELETE</vscode-option>
+                <vscode-option>PATCH</vscode-option>
+                <vscode-option>TRACE</vscode-option>
+                <vscode-option>CONNECT</vscode-option>
+                <vscode-option>OPTIONS</vscode-option>
+                <vscode-option>SEARCH</vscode-option>
+              </vscode-single-select>
+              <vscode-textfield id="input-url" placeholder="URL"></vscode-textfield>
+              <spacer></spacer>
+              <vscode-button id="button-run" icon="run">Run</vscode-button>
+            </div>
+            <vscode-checkbox id="bust-cache" label="Bust cache (using query string)"></vscode-checkbox>
+          </div>
 
-        <br>
+          <br>
 
-        <div id="container-options">
-          <vscode-collapsible title="Variables">
-            <p>
-              Every text input accepts variables in the following formats (quotes are mandatory).<br>
-              Variables are substituted at runtime.
-              <br><br>
-              <vscode-table>
-                <vscode-table-body slot="body">
-                  <vscode-table-row>
-                    <vscode-table-cell><code>{{file "relative/path.file"}}</code></vscode-table-cell>
-                    <vscode-table-cell>Read an entire local file as string, path relative to workspace</vscode-table-cell>
-                  </vscode-table-row>
-                  <vscode-table-row>
-                    <vscode-table-cell><code>{{env "variable"}}</code></vscode-table-cell>
-                    <vscode-table-cell>Replace with a system environment variable</vscode-table-cell>
-                  </vscode-table-row>
-                  <vscode-table-row>
-                    <vscode-table-cell><code>{{.env "relative/path.file" "variable"}}</code></vscode-table-cell>
-                    <vscode-table-cell>Read "variable" from .env file, path relative to workspace</vscode-table-cell>
-                  </vscode-table-row>
-                </vscode-table-body>
-              </vscode-table>
+          <div id="container-options">
+            <vscode-collapsible title="Variables">
+              <p>
+                Every text input accepts variables in the following formats (quotes are mandatory).<br>
+                Variables are substituted at runtime.
+                <br><br>
+                <vscode-table>
+                  <vscode-table-body slot="body">
+                    <vscode-table-row>
+                      <vscode-table-cell><code>{{file "relative/path.file"}}</code></vscode-table-cell>
+                      <vscode-table-cell>Read an entire local file as string, path relative to workspace</vscode-table-cell>
+                    </vscode-table-row>
+                    <vscode-table-row>
+                      <vscode-table-cell><code>{{env "variable"}}</code></vscode-table-cell>
+                      <vscode-table-cell>Replace with a system environment variable</vscode-table-cell>
+                    </vscode-table-row>
+                    <vscode-table-row>
+                      <vscode-table-cell><code>{{.env "relative/path.file" "variable"}}</code></vscode-table-cell>
+                      <vscode-table-cell>Read "variable" from .env file, path relative to workspace</vscode-table-cell>
+                    </vscode-table-row>
+                  </vscode-table-body>
+                </vscode-table>
+                <br>
+                You can also nest them: <code>{{file "{{.env "settings.env" "file"}}"}}</code>
+              </p>
+            </vscode-collapsible>
+
+            <vscode-divider></vscode-divider>
+
+            <vscode-collapsible title="Auth" open>
+              <p>
+                You can auto-construct auth headers using the following variables (quotes are mandatory).<br>
+                Patterns fitting the variables outlined above will still be substituted (quotes are still mandatory).<br>
+                Variables are substituted at runtime.
+              </p>
+              <ul>
+                <li><code>{{auth basic "username" "password"}}</code></li>
+                <li><code>{{auth bearer "token"}}</code></li>
+              </ul>
+              <p>
+                Example: <code>{{auth basic "{{env "systemuser"}}" "{{.env ".env" "API_PW"}}"}}</code>
+              </p>
               <br>
-              You can also nest them: <code>{{file "{{.env "settings.env" "file"}}"}}</code>
-            </p>
-          </vscode-collapsible>
+              <div style="display: flex; flex-direction: row; gap: 0.5rem; margin-left: 0.5rem; align-items: center;">
+                <span style="flex-grow: 0; flex-shrink: 0;">Authorization:</span>
+                <vscode-textfield id="input-auth" placeholder="Value" style="flex: 1; margin: 0.5rem;"></vscode-textfield>
+              </div>
+            </vscode-collapsible>
 
-          <vscode-divider></vscode-divider>
+            <vscode-divider></vscode-divider>
 
-          <vscode-collapsible title="Auth" open>
-            <p>
-              You can auto-construct auth headers using the following variables (quotes are mandatory).<br>
-              Patterns fitting the variables outlined above will still be substituted (quotes are still mandatory).<br>
-              Variables are substituted at runtime.
-            </p>
-            <ul>
-              <li><code>{{auth basic "username" "password"}}</code></li>
-              <li><code>{{auth bearer "token"}}</code></li>
-            </ul>
-            <p>
-              Example: <code>{{auth basic "{{env "systemuser"}}" "{{.env ".env" "API_PW"}}"}}</code>
-            </p>
-            <br>
-            <div style="display: flex; flex-direction: row; gap: 0.5rem; margin-left: 0.5rem; align-items: center;">
-              <span style="flex-grow: 0; flex-shrink: 0;">Authorization:</span>
-              <vscode-textfield id="input-auth" placeholder="Value" style="flex: 1; margin: 0.5rem;"></vscode-textfield>
-            </div>
-          </vscode-collapsible>
+            <vscode-collapsible title="Headers" open>
+              <div style="display: flex; flex-direction: column; margin: 0.5rem; gap: 0.5rem;">
+                <vscode-table>
+                  <vscode-table-header slot="header">
+                    <vscode-table-header-cell>Header</vscode-table-header-cell>
+                    <vscode-table-header-cell>Value</vscode-table-header-cell>
+                    <vscode-table-header-cell>DEL</vscode-table-header-cell>
+                  </vscode-table-header>
+                  <vscode-table-body id="table-header" slot="body">
+                  </vscode-table-body>
+                </vscode-table>
+                <br>
+                <vscode-button id="button-add-header" icon="add" style="align-self: flex-end;">Add</vscode-button>
+              </div>
+            </vscode-collapsible>
 
-          <vscode-divider></vscode-divider>
 
-          <vscode-collapsible title="Headers" open>
-            <div style="display: flex; flex-direction: column; margin: 0.5rem; gap: 0.5rem;">
-              <vscode-table>
-                <vscode-table-header slot="header">
-                  <vscode-table-header-cell>Header</vscode-table-header-cell>
-                  <vscode-table-header-cell>Value</vscode-table-header-cell>
-                  <vscode-table-header-cell>DEL</vscode-table-header-cell>
-                </vscode-table-header>
-                <vscode-table-body id="table-header" slot="body">
-                </vscode-table-body>
-              </vscode-table>
-              <br>
-              <vscode-button id="button-add-header" icon="add" style="align-self: flex-end;">Add</vscode-button>
-            </div>
-          </vscode-collapsible>
-          
+            <vscode-divider></vscode-divider>
 
-          <vscode-divider></vscode-divider>
-
-          <vscode-collapsible title="Body" open>
-            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 0.5rem;">
-              <div id="body-errors" hidden></div>
-              <vscode-textarea id="input-body" placeholder="Request Body" monospace style="width: 100%;" rows="12"></vscode-textarea>
-            </div>
-          </vscode-collapsible>
-        </div>
+            <vscode-collapsible title="Body" open>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; margin: 0.5rem;">
+                <div id="body-errors" hidden></div>
+                <vscode-textarea id="input-body" placeholder="Request Body" monospace style="width: 100%;" rows="12"></vscode-textarea>
+              </div>
+            </vscode-collapsible>
+          </div>
         </vscode-tab-panel>
 
 
@@ -229,9 +232,12 @@
       button_run.onclick = () => vscode.postMessage({channel: 'run', value: data});
       const input_auth = document.getElementById('input-auth');
       input_auth.onchange = (e) => update('auth', e.target.value);
+      const check_bustCache = document.getElementById('bust-cache');
+      check_bustCache.checked = 
+      check_bustCache.onchange = (e) => update('bustCache', e.target.checked);
+
       const table_header = document.getElementById('table-header');
       const button_add_header = document.getElementById('button-add-header');
-
       const addHeaderRow = (newIndex, row) => {
         const newRow = document.createElement('vscode-table-row');
         const cellHeader = document.createElement('vscode-table-cell');
@@ -312,6 +318,7 @@
         title.innerHTML = data.label;
         select_method.value = data.method ?? 'GET';
         input_url.value = data.url ?? '';
+        check_bustCache.checked = data.bustCache;
         input_auth.value = data.auth ?? '';
         table_header.replaceChildren();
         if (data.headers.length > 0) {
