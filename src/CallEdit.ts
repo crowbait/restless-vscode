@@ -38,11 +38,11 @@ export class CallEdit {
   webview: vscode.WebviewPanel;
 
   private webviewSendMessage = (message: any): void => {
-    this.log.appendLine(`Sending to webview edit: ${JSON.stringify(message)}`);
+    this.log.appendLine(`Sending to webview edit: ${JSON.stringify(message.channel)}`);
     this.webview.webview.postMessage(message);
   };
   private webviewReceiveMessage = (message: any): void => {
-    this.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
+    this.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message.channel)}`);
     switch (message.channel) {
       case 'event':
         switch (message.value) {

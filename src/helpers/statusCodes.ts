@@ -1,4 +1,4 @@
-{
+export default {
   100: {
     code: 100,
     message: 'Continue',
@@ -424,4 +424,4 @@
     message: 'Network Read Timeout Error',
     description: 'Used by some HTTP proxies to signal a network read timeout behind the proxy to a client in front of the proxy.'
   }
-};
+} as {[Key in number]: {code: Key, message: string, description: string}};

@@ -35,6 +35,14 @@
       vscode-table {
         --vscode-font-family: var(--vscode-editor-font-family);
       }
+      vscode-table-body {
+        padding-top: 0.25rem;
+      }
+      vscode-table-cell {
+        word-wrap: break-word;
+        white-space: normal;
+        vertical-align: top;
+      }
 
       #status-container {
         display: flex;
@@ -104,9 +112,8 @@
       </h1>
       <h3 id="title-sub"></h3>
 
-      <div id="loading-wrapper" style="display: flex; flex-direction: row; justify-items: center; margin-top: 4rem; position: relative;">
-        <vscode-icon name="loading" spin spin-duration="1" size="128" style="margin: auto;"></vscode-icon>
-        <span id="timekeeper" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-family: var(--vscode-editor-font-family);"></span>
+      <div id="loading-wrapper" style="margin-top: 4rem; position: relative;">
+        <vscode-icon name="loading" spin spin-duration="1" size="128" style="display: block; width: fit-content; margin: auto;"></vscode-icon>
       </div>
 
       <div id="container-results" style="display: none;">
@@ -116,7 +123,6 @@
 
     
     <script>
-      const statusCodes = replace_statusCodes;
       const vscode = acquireVsCodeApi();
       let data = { /* getJsonObject() */ };
 
@@ -125,185 +131,178 @@
       const title_sub = document.getElementById('title-sub');
 
       const loadingWrapper = document.getElementById('loading-wrapper');
-      const timekeeperSpan = document.getElementById('timekeeper');
 
       const containerResults = document.getElementById('container-results');
 
-      const run = async () => {
+      const runStart = async () => {
         loadingWrapper.style.display = 'block';
         containerResults.style.display = 'none';
         containerResults.replaceChildren();
+      }
 
-        const headers = new Headers();
-        if (data.auth) headers.set('Authorization', data.auth);
-        data.headers.forEach((x, i) => headers.set(x.header, x.value));
+      const runSuccess = (runData) => {
+        const statusContainer = document.createElement('div');
+        statusContainer.id = "status-container";
+        const statusSpan = document.createElement('span');
+        const severity = runData.status < 300 ? 'ok' : runData.status < 400 ? 'warning' : 'error';
+        statusSpan.id = "status";
+        statusSpan.classList.add(severity);
+        statusSpan.innerHTML = `${runData.status}: <span>${runData.statusMessage}</span>`;
+        statusContainer.appendChild(statusSpan);
 
-        let done = 0;
-        const start = Date.now();
-        const timekeeper = setInterval(() => {
-          timekeeperSpan.innerText = `${((Date.now() - start) / 1000).toFixed(1)} s`;	
-        }, 100);
+        const button_run = document.createElement('vscode-button');
+        button_run.id = 'button-run';
+        button_run.setAttribute('icon', 'run');
+        button_run.innerText = 'Run again';
+        button_run.onclick = () => vscode.postMessage({channel: 'event', value: 'ready'});
+        statusContainer.appendChild(button_run);
 
-        const setCommonParts = (status, message) => {
-          clearInterval(timekeeper);
+        const timeSpan = document.createElement('span');
+        timeSpan.id = "timeSpan";
+        const seconds = (runData.milliseconds / 1000);
+        timeSpan.innerHTML = seconds > 10 ? `${seconds.toFixed(1)} s` : `${(seconds * 1000).toFixed(0)} ms`;
+        statusContainer.appendChild(timeSpan);
 
-          const statusContainer = document.createElement('div');
-          statusContainer.id = "status-container";
-          const statusSpan = document.createElement('span');
-          const severity = status === 'Error' ? 'error' : status < 300 ? 'ok' : status < 400 ? 'warning' : 'error';
-          statusSpan.id = "status";
-          statusSpan.classList.add(severity);
-          statusSpan.innerHTML = `${status}: <span>${message ?? statusCodes[status]?.message}</span>`;
-          statusContainer.appendChild(statusSpan);
+        containerResults.appendChild(statusContainer);
+          
 
-          const button_run = document.createElement('vscode-button');
-          button_run.id = 'button-run';
-          button_run.setAttribute('icon', 'run');
-          button_run.innerText = 'Run again';
-          button_run.onclick = () => run();
-          statusContainer.appendChild(button_run);
+        const createCollapsible = (title, content, open) => {
+          const collapsible = document.createElement('vscode-collapsible');
+          collapsible.title = title;
+          collapsible.open = open ?? false;
+          if (Array.isArray(content)) {
+            content.forEach(x => collapsible.appendChild(x));
+          } else collapsible.appendChild(content);
+          return collapsible;
+        }
 
-          const timeSpan = document.createElement('span');
-          timeSpan.id = "timeSpan";
-          const seconds = ((done - start) / 1000);
-          timeSpan.innerHTML = seconds > 10 ? `${seconds.toFixed(1)} s` : `${(seconds * 1000).toFixed(0)} ms`;
-          statusContainer.appendChild(timeSpan);
-
-          containerResults.appendChild(statusContainer);
-        };
-
-
-
-        try {
-          const createCachebuster = (url) => {
-            let ret = '';
-            if (url.includes('?')) {
-              ret = `${url}&${Date.now().toString().substring(7)}`;
-            } else ret = `${url}?${Date.now().toString().substring(7)}`;
-            title_sub.innerHTML = `${data.method}&nbsp;&nbsp;&nbsp;${ret}`;
-            return ret;
+        const createHeadersTable = (headers) => {
+          if (headers.keys().toArray().length > 0) {
+            const table = document.createElement('vscode-table');
+            const tableBody = document.createElement('vscode-table-body');
+            tableBody.slot = 'body';
+            headers.forEach((h) => {
+              const row = document.createElement('vscode-table-row');
+              const cellHeader = document.createElement('vscode-table-cell');
+              cellHeader.innerText = h.header;
+              const cellValue = document.createElement('vscode-table-cell');
+              cellValue.innerText = h.value;
+              row.appendChild(cellHeader);
+              row.appendChild(cellValue);
+              tableBody.appendChild(row);
+            });
+            table.appendChild(tableBody);
+            return table;
+          } else {
+            const headersWrapper = document.createElement('div');
+            headersWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; font-style: italic;';
+            headersWrapper.innerText = 'No headers';
+            return headersWrapper;
           }
-          const response = await fetch(
-            data.bustCache ? createCachebuster(data.url) : data.url, {
-            method: data.method,
-            headers: headers,
-            body: data.body ? data.body : undefined
-          });
-          done = Date.now();
-          setCommonParts(response.status);
+        }
 
-          const createCollapsible = (title, content, open) => {
-            const collapsible = document.createElement('vscode-collapsible');
-            collapsible.title = title;
-            collapsible.open = open ?? false;
-            if (Array.isArray(content)) {
-              content.forEach(x => collapsible.appendChild(x));
-            } else collapsible.appendChild(content);
-            return collapsible;
-          }
-
-          const createHeadersTable = (headers) => {
-            if (headers.keys().toArray().length > 0) {
-              const table = document.createElement('vscode-table');
-              const tableBody = document.createElement('vscode-table-body');
-              tableBody.slot = 'body';
-              headers.forEach((x, i) => {
-                const row = document.createElement('vscode-table-row');
-                const cellHeader = document.createElement('vscode-table-cell');
-                cellHeader.innerText = i;
-                const cellValue = document.createElement('vscode-table-cell');
-                cellValue.innerText = x;
-                row.appendChild(cellHeader);
-                row.appendChild(cellValue);
-                tableBody.appendChild(row);
-              });
-              table.appendChild(tableBody);
-              return table;
-            } else {
-              const headersWrapper = document.createElement('div');
-              headersWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; font-style: italic;';
-              headersWrapper.innerText = 'No headers';
-              return headersWrapper;
-            }
-          }
-
-          const createBodyField = (body, raw) => {
-            const bodyWrapper = document.createElement('div');
-            if (body) {
-              if (typeof body === 'string') {
-                if (!raw && (body.startsWith('<!DOCTYPE html>') || body.startsWith('<html>'))) {
-                  const iframe = document.createElement('iframe');
-                  iframe.srcdoc = body;
-                  iframe.sandbox = 'allow-scripts';
-                  iframe.style = 'width: 100%; height: 24rem; border: 1px solid var(--vscode-widget-border); border-radius: 4px;';
-                  bodyWrapper.appendChild(iframe);
-                } else {
-                  bodyWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; padding: 0.5rem;';
-                  bodyWrapper.innerText = body;
-                }
+        const createBodyField = (body, raw) => {
+          const bodyWrapper = document.createElement('div');
+          if (body) {
+            if (typeof body === 'string') {
+              if (!raw && (body.startsWith('<!DOCTYPE html>') || body.startsWith('<html>'))) {
+                const iframe = document.createElement('iframe');
+                iframe.srcdoc = body;
+                iframe.sandbox = 'allow-scripts';
+                iframe.style = 'width: 100%; height: 24rem; border: 1px solid var(--vscode-widget-border); border-radius: 4px;';
+                bodyWrapper.appendChild(iframe);
               } else {
-                if (typeof body === 'object') {
-                  bodyWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; padding: 0.5rem;';
-                  bodyWrapper.innerHTML = JSONTree.create(body);
-                }
+                bodyWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; padding: 0.5rem;';
+                bodyWrapper.innerText = body;
               }
             } else {
-              bodyWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; font-style: italic;';
-              bodyWrapper.innerText = 'No body';
+              if (typeof body === 'object') {
+                bodyWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; padding: 0.5rem;';
+                bodyWrapper.innerHTML = JSONTree.create(body);
+              }
             }
-            return bodyWrapper;
+          } else {
+            bodyWrapper.style = 'font-family: var(--vscode-editor-font-family); margin: 1rem; font-style: italic;';
+            bodyWrapper.innerText = 'No body';
           }
-
-          containerResults.appendChild(document.createElement('vscode-divider'));
-          const requestContainer = document.createElement('div');
-          const requestHeader = document.createElement('h4');
-          requestHeader.innerText = 'Request';
-          requestContainer.appendChild(requestHeader);
-          requestContainer.appendChild(createCollapsible('Headers', createHeadersTable(headers), true));
-          requestContainer.appendChild(createCollapsible('Body', createBodyField(data.body), !!data.body));
-          containerResults.appendChild(requestContainer);
-
-          let body = '';
-          let bodyJson = undefined;
-          try {
-            body = await response.text();
-            bodyJson = JSON.parse(body);
-          } catch (error) {
-            // ignore
-          }
-
-          containerResults.appendChild(document.createElement('vscode-divider'));
-          const responseContainer = document.createElement('div');
-          const responseHeader = document.createElement('h4');
-          responseHeader.innerText = 'Response';
-          responseContainer.appendChild(responseHeader);
-          responseContainer.appendChild(createCollapsible('Headers', createHeadersTable(response.headers), true));
-          
-          const responseTabs = document.createElement('vscode-tabs');
-          responseTabs.style = 'margin-top: 1rem;';
-
-          const tabHeaderParsed = document.createElement('vscode-tab-header');
-          tabHeaderParsed.slot = 'header';
-          tabHeaderParsed.innerText = 'Content';
-          responseTabs.appendChild(tabHeaderParsed);
-          const tabBodyParsed = document.createElement('vscode-tab-panel');
-          tabBodyParsed.appendChild(createBodyField(bodyJson ?? body));
-          responseTabs.appendChild(tabBodyParsed);
-
-          const tabHeaderRaw = document.createElement('vscode-tab-header');
-          tabHeaderRaw.slot = 'header';
-          tabHeaderRaw.innerText = 'Raw';
-          responseTabs.appendChild(tabHeaderRaw);
-          const tabBodyRaw = document.createElement('vscode-tab-panel');
-          tabBodyRaw.appendChild(createBodyField(body, true));
-          responseTabs.appendChild(tabBodyRaw);
-
-          responseContainer.appendChild(responseTabs);
-          containerResults.appendChild(responseContainer);
-        } catch (error) {
-          done = date.now();
-          setCommonParts('Error', error.message);
+          return bodyWrapper;
         }
+
+        containerResults.appendChild(document.createElement('vscode-divider'));
+        const requestContainer = document.createElement('div');
+        const requestHeader = document.createElement('h4');
+        requestHeader.innerText = 'Request';
+        requestContainer.appendChild(requestHeader);
+        requestContainer.appendChild(createCollapsible('Headers', createHeadersTable(runData.request.headers), false));
+        requestContainer.appendChild(createCollapsible('Body', createBodyField(runData.request.body), false));
+        containerResults.appendChild(requestContainer);
+
+        let bodyJson = undefined;
+        try {
+          bodyJson = JSON.parse(runData.body);
+        } catch (error) {
+          // ignore
+        }
+
+        containerResults.appendChild(document.createElement('vscode-divider'));
+        const responseContainer = document.createElement('div');
+        const responseHeader = document.createElement('h4');
+        responseHeader.innerText = 'Response';
+        responseContainer.appendChild(responseHeader);
+        responseContainer.appendChild(createCollapsible('Headers', createHeadersTable(runData.headers), true));
+
+        const responseTabs = document.createElement('vscode-tabs');
+        responseTabs.style = 'margin-top: 1rem;';
+
+        const tabHeaderParsed = document.createElement('vscode-tab-header');
+        tabHeaderParsed.slot = 'header';
+        tabHeaderParsed.innerText = 'Content';
+        responseTabs.appendChild(tabHeaderParsed);
+        const tabBodyParsed = document.createElement('vscode-tab-panel');
+        tabBodyParsed.appendChild(createBodyField(bodyJson ?? runData.body));
+        responseTabs.appendChild(tabBodyParsed);
+
+        const tabHeaderRaw = document.createElement('vscode-tab-header');
+        tabHeaderRaw.slot = 'header';
+        tabHeaderRaw.innerText = 'Raw';
+        responseTabs.appendChild(tabHeaderRaw);
+        const tabBodyRaw = document.createElement('vscode-tab-panel');
+        tabBodyRaw.appendChild(createBodyField(runData.body, true));
+        responseTabs.appendChild(tabBodyRaw);
+
+        responseContainer.appendChild(responseTabs);
+        containerResults.appendChild(responseContainer);
+
+        loadingWrapper.style.display = 'none';
+        containerResults.style.display = 'block';
+      }
+
+      const runError = (msg) => {
+        const statusContainer = document.createElement('div');
+        statusContainer.id = "status-container";
+        const statusSpan = document.createElement('span');
+        statusSpan.id = "status";
+        statusSpan.classList.add('error');
+        statusSpan.innerHTML = 'Error';
+        statusContainer.appendChild(statusSpan);
+
+        const button_run = document.createElement('vscode-button');
+        button_run.id = 'button-run';
+        button_run.setAttribute('icon', 'run');
+        button_run.innerText = 'Run again';
+        button_run.onclick = () => vscode.postMessage({channel: 'event', value: 'ready'});
+        statusContainer.appendChild(button_run);
+
+        const timeSpan = document.createElement('span');
+        timeSpan.innerHTML = ' ';
+        statusContainer.appendChild(timeSpan);
+
+        containerResults.appendChild(statusContainer);
+
+        containerResults.appendChild(document.createElement('vscode-divider'));
+        const errorMsgSpan = document.createElement('span');
+        errorMsgSpan.innerText = msg;
+        containerResults.appendChild(errorMsgSpan);
 
         loadingWrapper.style.display = 'none';
         containerResults.style.display = 'block';
@@ -314,18 +313,30 @@
       // -----------------
       (function() {
         window.addEventListener('message', event => { 
-          vscode.postMessage({channel: 'log', value: `Message from host: ${JSON.stringify(event.data)}`});
           switch (event.data.channel) {
             case 'call-data':
               data = event.data.value;
               title.innerText = data.label;
               title_sub.innerHTML = `${data.method}&nbsp;&nbsp;&nbsp;${data.url}`;
-              run();
+              vscode.postMessage({channel: 'event', value: 'prepared'});
+              runStart();
+              break;
+
+            case 'run-success':
+              console.log(event.data);
+              // 'success' in this context only means the call succeeded, not that it was a 2xx status
+              runSuccess(event.data.value);
+              break;
+
+            case 'run-err':
+              console.error('Run failed: ' + event.data.channel);
+              vscode.postMessage({channel: 'err', value: `Run failed: ${event.data.value}`});
+              runError(event.data.value);
               break;
           
             default: 
               console.error('Unknown channel: ' + event.data.channel); 
-              vscode.postMessage({channel: 'err', value: `Unknwnown channel: ${event.data.channel}`});
+              vscode.postMessage({channel: 'err', value: `Unknwnown channel: ${event.data.channel}, data: ${JSON.stringify(event.data.value)}`});
               break;
           }
         });

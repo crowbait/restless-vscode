@@ -1,13 +1,30 @@
 import {readFileSync} from 'fs';
+import http from 'http';
+import https from 'https';
 import path from 'path';
 import * as vscode from 'vscode';
-import RESTCall from './Call';
+import RESTCall, {JSONCallObject} from './Call';
 import RESTCall_Temporary from './Call-Temporary';
-import {replaceHtmlParts, replaceRessources} from './helpers/WebViewHelpers';
+import {replaceRessources} from './helpers/WebViewHelpers';
+import statusCodes from './helpers/statusCodes';
+
+interface CallResultData {
+  status: number
+  statusMessage: string
+  milliseconds: number
+  request: {
+    headers: JSONCallObject['headers']
+    body: string
+  }
+  headers: JSONCallObject['headers']
+  body: string
+}
 
 export class CallRun {
   constructor(
+    /** A reference to the Call / Temporary Call that owns this Run */
     call: RESTCall | RESTCall_Temporary,
+    /** Callback to execute when the run (webview) is destroyed */
     destructor: () => void
   ) {
     this.call = call;
@@ -21,7 +38,10 @@ export class CallRun {
         retainContextWhenHidden: true
       }
     );
-    this.webview.onDidDispose(this.destructor);
+    this.webview.onDidDispose(() => {
+      if (this.request) this.request.destroy();
+      this.destructor();
+    });
     this.webview.webview.onDidReceiveMessage(this.webviewReceiveMessage);
     if (call.identifier === 'call_temporary') {
       this.webview.webview.html = this.getHTML((call as RESTCall_Temporary).context);
@@ -37,25 +57,98 @@ export class CallRun {
   destructor: () => void;
   webview: vscode.WebviewPanel;
 
-  run = (): void => {
-    const data = this.call.getJsonObject();
-    data.auth = this.call.constructAuthHeader(data.auth);
-    data.body = this.call.transformVariableStrings(data.body);
-    data.headers = data.headers.map((x) => ({header: x.header, value: this.call.transformVariableStrings(x.value)}));
-    data.url = this.call.transformVariableStrings(data.url);
-    this.webviewSendMessage({channel: 'call-data', value: data});
+  request: http.ClientRequest | undefined;
+  preparedData: JSONCallObject | undefined;
+
+  /**
+   * Prepares stored data to be used in run, eg. variable substitution
+   */
+  prepareRun = (): void => {
+    const createCachebuster = (url: string): string => {
+      let ret = '';
+      if (url.includes('?')) {
+        ret = `${url}&${Date.now().toString().substring(7)}`;
+      } else ret = `${url}?${Date.now().toString().substring(7)}`;
+      return ret;
+    };
+    this.preparedData = this.call.getJsonObject();
+    this.preparedData.auth = this.call.constructAuthHeader(this.preparedData.auth);
+    if (this.preparedData.auth) this.preparedData.headers.push({header: 'Authorization', value: this.preparedData.auth});
+    this.preparedData.headers = this.preparedData.headers.map((x) => ({header: x.header.toLowerCase(), value: this.call.transformVariableStrings(x.value)}));
+    this.preparedData.body = this.call.transformVariableStrings(this.preparedData.body);
+    this.preparedData.url = this.call.transformVariableStrings(this.preparedData.url);
+    if (this.call.bustCache) this.preparedData.url = createCachebuster(this.preparedData.url);
+    this.webviewSendMessage({channel: 'call-data', value: this.preparedData});
   };
 
-  private webviewSendMessage = (message: any): void => {
-    this.log.appendLine(`Sending to webview run: ${JSON.stringify(message)}`);
+  /**
+   * Creates an HTTP(S) request, runs it and provides parsed response data to the webview
+   */
+  run = (): void => {
+    if (!this.preparedData) return this.call.err('Prepared data empty on call. This is a bug.');
+    let start: number | undefined;
+    
+    const options: http.RequestOptions = {
+      method: this.preparedData.method,
+      auth: undefined,
+      headers: this.preparedData.headers.reduce((sum, cur) => {sum[cur.header] = cur.value; return sum;}, {} as Record<string, string>)
+    };
+    const callback = (res: http.IncomingMessage): void => {
+      const done = Date.now();
+      const ret: CallResultData = {
+        status: res.statusCode ?? -1,
+        statusMessage: statusCodes[res.statusCode ?? 0]?.message ?? '',
+        milliseconds: done - start!,
+        request: {
+          headers: this.preparedData!.headers,
+          body: this.preparedData!.body
+        },
+        headers: Object.entries(res.headers).map((h) => ({header: h[0], value: Array.isArray(h[1]) ? h[1].join(', ') : h[1] ?? ''})),
+        body: ''
+      };
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {if (typeof chunk === 'string') ret.body += chunk; return;});
+      res.on('end', () => this.webviewSendMessage({channel: 'run-success', value: ret}));
+    };
+
+    try {
+      if (this.preparedData?.url.startsWith('http://')) {
+        this.request = http.request(this.preparedData.url, options, callback);
+      } else {
+        this.request = https.request(this.preparedData.url, options, callback);
+      }
+
+      if (this.preparedData.body) this.request.write(this.preparedData.body);
+
+      this.request.on('error', (err) => this.webviewSendMessage({channel: 'run-err', value: err.message}));
+      start = Date.now();
+      this.request.end();
+    } catch (err) {
+      this.webviewSendMessage({channel: 'run-err', value: (err as Error).message});
+    }
+  };
+
+  /**
+   * Posts a message to the webview
+   * @param message channel: channel name; value: any serializable object
+   */
+  private webviewSendMessage = (message: {channel: string, value: any}): void => {
+    this.log.appendLine(`Sending to webview run: ${JSON.stringify(message.channel)}`);
     this.webview.webview.postMessage(message);
   };
+  /**
+   * Called when the webview posts a message. Param *should* adhere to the priciples set in `webviewSendMessage`, but
+   * this cannot be guaranteed.
+   */
   private webviewReceiveMessage = (message: any): void => {
-    this.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message)}`);
+    this.log.appendLine(`Receiving from webview edit: ${JSON.stringify(message.channel)}`);
     switch (message.channel) {
       case 'event':
         switch (message.value) {
           case 'ready':
+            this.prepareRun();
+            break;
+          case 'prepared':
             this.run();
             break;
         }
@@ -73,10 +166,14 @@ export class CallRun {
     }
   };
 
+  /**
+   * Gets and prepares HTML to use for the webview
+   * @param context Context of the extension, used to generate paths
+   * @returns HTML
+   */
   private getHTML = (context: vscode.ExtensionContext): string => {
     let html = readFileSync(context.asAbsolutePath(path.join('src', 'CallRun.html')), 'utf-8');
     html = replaceRessources(html, this.webview.webview, context);
-    html = replaceHtmlParts(html, context);
     return html;
   };
 }

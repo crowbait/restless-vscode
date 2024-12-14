@@ -12,7 +12,6 @@ vsc-extension-quickstart.md
 src/**
 !src/helpers/jsontree.css
 !src/helpers/jsontree.js
-!src/helpers/statusCodes.jspart
 !src/*.html
 
 node_modules

@@ -58,7 +58,7 @@ class RESTCall extends ListEntry {
     this.provider.log.appendLine(`Running ${this.label}`);
     if (this.runView) {
       this.runView.webview.reveal();
-      this.runView.run();
+      this.runView.prepareRun();
       return;
     }
     this.runView = new CallRun(this, () => this.runView = undefined);

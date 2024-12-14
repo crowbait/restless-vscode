@@ -69,8 +69,14 @@
         border: 1px solid var(--vscode-widget-border);
         border-radius: 4px;
       }
+      #body-errors {
+        color: darkorange;
+        font-family: var(--vscode-editor-font-family);
+        background: var(--vscode-textPreformat-background);
+        padding: 0.25rem;
+      }
 
-      #json-errors, #body-errors {
+      #json-errors {
         color: lightcoral;
         font-family: var(--vscode-editor-font-family);
         background: darkred;
@@ -300,7 +306,7 @@
         } catch (error) {
           vscode.postMessage({channel: 'err', value: `Error parsing body: ${error.message}`});
           body_errors.hidden = false;
-          body_errors.innerText = error.message;
+          body_errors.innerText = `Warning: ${error.message}`;
         }
       }
       input_body.onchange = (e) => {
@@ -349,7 +355,6 @@
       // -----------------
       (function() {
         window.addEventListener('message', event => { 
-          vscode.postMessage({channel: 'log', value: `Message from host: ${JSON.stringify(event.data)}`});
           switch (event.data.channel) {
             case 'call-data':
               data = event.data.value;

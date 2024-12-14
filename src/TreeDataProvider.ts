@@ -62,10 +62,10 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
     if (this.currentList.length === 0) {
       const stored = JSON.parse(existsSync(this.filepath) ? readFileSync(this.filepath, 'utf-8') : '[]') as IListEntryCore[];
       const transformed = stored.map((x) => x.contextValue === 'call' ? new RESTCall(this, x as JSONCallObject) : new Folder(this, x));
-      transformed.sort(ListEntry.sorter);
-      this.log.appendLine(`Read saved list: ${JSON.stringify(stored)}`);
+      this.log.appendLine(`Read saved list: ${JSON.stringify(stored.map((e) => e.identifier))}`);
       this.currentList = transformed;
     }
+    this.currentList.sort(ListEntry.sorter);
     if (element) {
       if (element.contextValue !== 'folder') return Promise.resolve([]);
       const ret = new Folder(this, element).getChildren();
