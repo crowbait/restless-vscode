@@ -1,6 +1,6 @@
 import {ThemeIcon} from 'vscode';
 import RESTCall from './Call';
-import ListEntry from './ListEntry';
+import ListEntry, {IListEntryCore} from './ListEntry';
 
 class Folder extends ListEntry {
   constructor(
@@ -35,7 +35,7 @@ class Folder extends ListEntry {
     return deleted;
   };
 
-  getJsonObject = (): {} => ({
+  getJsonObject = (): IListEntryCore => ({
     contextValue: this.contextValue,
     identifier: this.identifier,
     label: this.label,

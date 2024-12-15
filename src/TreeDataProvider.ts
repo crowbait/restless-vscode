@@ -97,7 +97,13 @@ class TreeDataProvider implements vscode.TreeDataProvider<ListEntry>, vscode.Tre
     (source.contextValue === 'call' ? new RESTCall(this, source) : new Folder(this, source)).reparent(target);
   };
   handleDrag = async (source: readonly ListEntry[], dataTransfer: vscode.DataTransfer): Promise<void> => {
-    dataTransfer.set('application/vnd.code.tree.restlessHttpRestClientView', new vscode.DataTransferItem(source.map((x) => x.getCore())));
+    dataTransfer.set(
+      'application/vnd.code.tree.restlessHttpRestClientView',
+      new vscode.DataTransferItem(source.map((x) => {
+        if (x.contextValue === 'call') return (x as RESTCall).getJsonObject();
+        if (x.contextValue === 'folder') return (x as Folder).getJsonObject();
+        return x.getCore();
+      })));
   };
 };
 
