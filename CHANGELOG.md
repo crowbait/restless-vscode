@@ -1,3 +1,12 @@
+## [0.6.2](https://github.com/crowbait/restless-vscode/compare/v0.6.1...v0.6.2) (2024-12-15)
+
+
+### Bug Fixes
+
+* data loss on drag-drop reordering/reparenting ([45ad401](https://github.com/crowbait/restless-vscode/commit/45ad401683c8a471467342539ff5addc7eab995b))
+
+
+
 ## [0.6.1](https://github.com/crowbait/restless-vscode/compare/v0.6.0...v0.6.1) (2024-12-14)
 
 
@@ -38,21 +47,6 @@
 ### Features
 
 * temporary call ([2014080](https://github.com/crowbait/restless-vscode/commit/2014080067ab61ce41d6befed4eadda96a1bcd75))
-
-
-
-# [0.3.0](https://github.com/crowbait/restless-vscode/compare/v0.2.0...v0.3.0) (2024-11-24)
-
-
-### Bug Fixes
-
-* command palette visibility per command ([689023b](https://github.com/crowbait/restless-vscode/commit/689023b80a587e111af1219718f317840dcd25d2))
-
-
-### Features
-
-* automatic refresh on file changes ([2ed2694](https://github.com/crowbait/restless-vscode/commit/2ed26946d9dfb3a3a6146058099118529203040c))
-* refresh command ([df6f4a3](https://github.com/crowbait/restless-vscode/commit/df6f4a3433bcf76ebdb26c16923246b462e7b8ae))
 
 
 
